@@ -142,15 +142,20 @@ int iput(MINODE *mip) // dispose a used minode by mip
     if (!mip->dirty)       return;
 
     // Write YOUR CODE to write mip->INODE back to disk
-    int ino = getino( ".");
-    int pos = (ino - 1) / 8 + inode_start;
-    int offset = (ino - 1) / 8;
-    get_block(dev, pos, buf);
-    INODE * ip = (INODE*) buf + offset;
-    *ip = mip->INODE;
-    put_block(dev, pos, buf);
+    // int ino = getino( ".");
+    // int pos = (ino - 1) / 8 + inode_start;
+    // int offset = (ino - 1) / 8;
+    // get_block(dev, pos, buf);
+    // INODE * ip = (INODE*) buf + offset;
+    // *ip = mip->INODE;
+    // put_block(dev, pos, buf);
 
-    
+    // Write YOUR CODE to write mip->INODE back to disk
+    int pos = (mip->ino - 1) / 8 + inode_start;
+    int offset = (mip->ino - 1) / 8;
+    get_block(dev, pos, buf);
+    INODE* ip = (INODE*) buf + offset;
+    put_block(dev, pos, buf); 
 } 
 
 int search(MINODE *ip, char *name)
