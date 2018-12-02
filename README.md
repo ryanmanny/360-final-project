@@ -5,6 +5,7 @@ https://www.eecs.wsu.edu/~cs360/demoRecord.html
 Team Members: Ryan Manny and Adolfo Garcia
 
 ============================= LEVEL 1 =========================================
+
 Start with an empty disk for level-1
 
 startup: mount_root
@@ -20,6 +21,7 @@ unlink
 chmod
 
 ============================ LEVEL 2 =========================================
+
 Use samples/PROJECT/mydisk for level-2
 
 cat 
