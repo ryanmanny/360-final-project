@@ -8,24 +8,24 @@ Team Members: Ryan Manny and Adolfo Garcia
 
 Start with an empty disk for level-1
 
-startup: mount_root
-ls
-pwd
-cd
-mkdir
-rmdir 
-creat
-link
-symlink
-unlink
-chmod
+- startup: mount_root
+- ls
+- pwd
+- cd
+- mkdir
+- rmdir 
+- creat
+- link
+- symlink
+- unlink
+- chmod
 
 ============================ LEVEL 2 =========================================
 
 Use samples/PROJECT/mydisk for level-2
 
-cat 
-cp
+- cat 
+- cp
 
 -------------------------------------------------------------------------------
     TEST:
@@ -46,8 +46,8 @@ cp
 
 ============================ LEVEL 3 ==========================================
 
-mount
-permissions
+- mount
+- permissions
 
 -------------------------------------------------------------------------------
     TEST:
