@@ -19,6 +19,8 @@ Start with an empty disk for level-1
 - symlink
 - unlink
 - chmod
+- touch
+- stat
 
 ============================ LEVEL 2 =========================================
 
@@ -26,6 +28,7 @@ Use samples/PROJECT/mydisk for level-2
 
 - cat 
 - cp
+- mv
 
 -------------------------------------------------------------------------------
     TEST:
@@ -39,6 +42,7 @@ Use samples/PROJECT/mydisk for level-2
     cp  /Z/hugefile newhuge;   ls;   cat newhuge
 
     NOTE: if can't do cat, cp: show individual commands of 
+    lseek
     open
     write
     read
@@ -47,6 +51,7 @@ Use samples/PROJECT/mydisk for level-2
 ============================ LEVEL 3 ==========================================
 
 - mount
+- umount
 - permissions
 
 -------------------------------------------------------------------------------
