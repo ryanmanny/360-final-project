@@ -17,7 +17,6 @@
 #define NMOUNT      4
 #define NPROC       2
 
-
 /*************** type.h file *********************************/
 typedef unsigned char  u8;
 typedef unsigned short u16;

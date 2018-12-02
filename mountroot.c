@@ -1,6 +1,5 @@
 #include "type.h"
 
-
  MINODE minode[NMINODE];
  MINODE *root;
  PROC   proc[NPROC], *running;

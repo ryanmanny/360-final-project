@@ -6,7 +6,6 @@
 #include <string.h>
 #include <libgen.h>
 #include <sys/stat.h>
-
 #include "type.h"
 extern char *name[64]; // assume at most 64 components in pathnames
 
