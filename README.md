@@ -8,9 +8,9 @@ Team Members: Ryan Manny and Adolfo Garcia
 
 Start with an empty disk for level-1
 
-- startup: mount_root
+- startup: mount_root ✓
 - ls
-- pwd
+- pwd ✓
 - cd
 - mkdir
 - rmdir 
