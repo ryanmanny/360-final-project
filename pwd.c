@@ -3,6 +3,7 @@
 MINODE *root;
 PROC   proc[NPROC], *running;
 
+// FUNCTIONS
 int rpwd(MINODE *wd)
 {
     char buf[BLKSIZE], dirname[BLKSIZE];
