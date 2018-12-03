@@ -10,7 +10,7 @@ char line[256], command[128], cmd_arg_str[128];
 
 // FUNCTION POINTER TABLE
 char *cmd_strs[] = {
-    // "ls",
+    "ls",
     "pwd",
     "cd"
     // "mkdir",
@@ -31,7 +31,7 @@ char *cmd_strs[] = {
 
 int (*cmds[])(char **) = {
     (int (*)()) 
-    // ls,
+    ls,
     pwd,
     cd
     // mkdir
