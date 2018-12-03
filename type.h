@@ -66,17 +66,17 @@ typedef struct proc{
 extern MINODE minode[NMINODE];
 extern MINODE *root;
 extern PROC   proc[NPROC], *running;
-extern char *tokens[64];
+extern char *tokens[64], *cmd_args[64];
 extern int n;
 extern int fd, dev;
 extern int nblocks, ninodes, bmap, imap, inode_start;
-extern char line[256],  pathname[256], command[128];
+extern char line[256], command[128], cmd_arg_str[128];
 
 /*************** FUNCTIONS *********************************/
 // UTIL.C
 int get_block(int fd, int blk, char buf[ ]);
 int put_block(int fd, int blk, char buf[ ]);
-int tokenize(char *pathname, char *delim);
+int tokenize(char *pathname, char *delim, char **tokens);
 MINODE *iget(int dev, int ino);
 int iput(MINODE *mip);
 int getino(char *pathname);
@@ -84,6 +84,6 @@ int search(INODE *ip, char *name);
 INODE_LOCATION mailman(int ino);
 
 // COMMANDS
-int pwd(MINODE *wd);
-int cd(char* dirname);
-int quit();
+int pwd(char *args[]);
+int cd(char *args[]);
+int quit(char *args[]);

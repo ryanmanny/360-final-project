@@ -1,10 +1,11 @@
 /************** util.c file ****************/
 #include "type.h"
 
-int dev, inode_start;
-char *tokens[64]; // assume at most 64 components in pathnames
+char *tokens[64];
+int dev;
+int inode_start;
 
-/**** globals defined in main.c file ****/
+// FUNCTIONS
 int get_block(int fd, int blk, char buf[ ])
 {
     lseek(fd, (long) blk * BLKSIZE, 0);
@@ -21,13 +22,13 @@ int put_block(int fd, int blk, char buf[ ])
     return 0;
 }  
 
-int tokenize(char *pathname, char *delim)
+int tokenize(char *str, char *delim, char *tokens[])
 {
     int count = 0;
     
-    char *s = strtok(pathname, delim);  // first call to strtok()
-    if (!s) return 0;
-    else tokens[count++] = s;
+    char *temp = strtok(str, delim);  // first call to strtok()
+    if (!temp) return 0;
+    else tokens[count++] = temp;
 
     // Call strtok() until it returns NULL
     while ((tokens[count++] = strtok(NULL, delim)));
@@ -146,7 +147,7 @@ int getino(char *pathname)
     char buf[BLKSIZE];
 
     int ino;
-    int n = tokenize(pathname, "/");
+    int n = tokenize(pathname, "/", tokens);
     
     get_block(dev, inode_start, buf);
     INODE* ip = (INODE*) buf + 1;
@@ -162,18 +163,6 @@ int getino(char *pathname)
         ip = &iget(dev, ino)->INODE;
     }
     return ino;
-}
-
-int quit(void)
-{
-    for (int i = 0; i < NMINODE; i++)
-    {
-        if (minode[i].refCount > 0 && minode[i].dirty)
-        {
-            iput(&minode[i]);
-        }
-    }
-    exit(0);
 }
 
 INODE_LOCATION mailman(int ino)

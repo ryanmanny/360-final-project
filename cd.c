@@ -6,8 +6,10 @@ MINODE minode[NMINODE];
 MINODE *root;
 PROC   proc[NPROC], *running;
 
-int cd(char* dirname)
+int cd(char* args[])
 {
+    char *dirname = args[0];
+
     MINODE* mip = running->cwd;
     int ino = 0;
 
