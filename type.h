@@ -63,7 +63,6 @@ typedef struct proc{
 }PROC;
 
 /*************** GLOBALS *********************************/
-
 extern MINODE minode[NMINODE];
 extern MINODE *root;
 extern PROC   proc[NPROC], *running;
