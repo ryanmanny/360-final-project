@@ -100,6 +100,8 @@ int mymkdir(MINODE *pip, char *name)
     for(i = 1; i < 15; i++)
         ip->i_block[i] = 0;
     mip->dirty = 1;
-    
+
     iput(mip);
+
+    
 }
