@@ -62,7 +62,7 @@ int run_command(char *cmd, char *args)
             return cmds[i](cmd_args);
         }
     }
-    printf("Invalid command!");
+    puts("Invalid command!");
     return -1;
 }
 
@@ -159,6 +159,8 @@ int main()
     init();
     mount_root();
 
+    char *temp;
+
     while(1)
     {
         printf("Enter a command:\n");  // TODO: Dynamically print valid commands
@@ -166,7 +168,11 @@ int main()
         line[strlen(line) - 1] = '\0'; // kill \n at end of line
         
         strcpy(command, strtok(line, " "));
-        strcpy(cmd_arg_str, strtok(NULL, "\n"));  // Tokenize the rest of the line to get args
+        temp = strtok(NULL, "\n");
+        if (temp)
+            strcpy(cmd_arg_str, temp);  // Tokenize the rest of the line to get args
+        else
+            strcpy(cmd_arg_str, "");
 
         run_command(command, cmd_arg_str);
 
