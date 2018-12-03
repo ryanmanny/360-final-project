@@ -69,7 +69,7 @@ int make_dir(char ** args)
             dp = (DIR*) cp;
         }
     }
-    mymkdir(pip, child);
+    mymkdir(pip, child, pino);
     pip->INODE.i_links_count++;
     
     //touch its atime and mark it DIRTY
@@ -77,7 +77,7 @@ int make_dir(char ** args)
     iput(pip);
 }
 
-int mymkdir(MINODE *pip, char *name)
+int mymkdir(MINODE *pip, char *name, int parentIno)
 {
     int ino = ialloc(dev);
     int bno = balloc(dev);
@@ -103,5 +103,25 @@ int mymkdir(MINODE *pip, char *name)
 
     iput(mip);
 
+    DIR* dp = (DIR*) buf;
+    dp->inode = ino;
+    dp->name_len = 1;
+    dp->rec_len = 12;
+    strcpy(dp->name, ".");
+    cp += dp->rec_len;
+    dp = (DIR*) cp;
+    dp->inode = parentIno;
+    dp->name_len = 2;
+    dp->rec_len = 1012;
+    strcpy(dp->name, "..");
+
+    put_block(dev, bno, buf);
+    
+}
+
+
+
+void createEntry(char* name, MINODE * dir, MINODE* file)
+{
     
 }
