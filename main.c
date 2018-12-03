@@ -1,15 +1,13 @@
 #include "type.h"
 
- MINODE minode[NMINODE];
- MINODE *root;
- PROC   proc[NPROC], *running;
- char gpath[128];
- char *name[64];
- int n;
- int fd, dev;
- int nblocks, ninodes, bmap, imap, inode_start;
- char line[256], pathname[256], command[128];
- char * cmdArr[100];
+MINODE minode[NMINODE];
+MINODE *root;
+PROC   proc[NPROC], *running;
+char *name[64];
+int fd, dev;
+int nblocks, ninodes, bmap, imap, inode_start;
+char line[256], pathname[256], command[128];
+char *cmd_args[128];
 
 int init()
 {
@@ -19,9 +17,10 @@ int init()
 
     printf("init()\n");
 
-    root = 0;
+    root = NULL;
 
-    for (i=0; i<NMINODE; i++){
+    for (i = 0; i < NMINODE; i++)
+    {
         mip = &minode[i];
         // set all entries to 0;
         mip->dev = 0;
@@ -31,29 +30,33 @@ int init()
         mip->mounted = 0;
         mip->mptr = 0;
     }
-    for (i=0; i<NPROC; i++){
+    for (i = 0; i < NPROC; i++)
+    {
         p = &proc[i];
-        // set pid = i; uid = i; cwd = 0;
+        // set pid = i; uid = i; cwd = 0;  TODO: Check if this is correct
         p->pid = i;
         p->uid = i;
         p->cwd = 0;
         p->next = 0;
         p->cwd = 0;
     }
+
+    return 0;
 }
 
-//6. mount_root()  // mount root file system, establish / and CWDs
 int mount_root()
 {
     printf("mount_root()\n");
     char buf[BLKSIZE];
-   // open device for RW (get a file descriptor as dev for the opened device)
+    
+    // open device for RW (get a file descriptor as dev for the opened device)
+    // TODO: Pass AS ARGUMENT
     dev = open("mydisk", O_RDWR);
     fd = dev;
     printf("dev: %d\n",dev);
     if (dev < 0)
     {
-        printf ("Cannot open!\n");
+        printf("Cannot open!\n");
         exit(0);
     }
 
@@ -61,10 +64,9 @@ int mount_root()
     get_block(fd, 1, buf);  
     sp = (SUPER *)buf;
 
-
     // check for EXT2 magic number:
-    //printf("s_magic = %x\n", sp->s_magic);
-    if (sp->s_magic != 0xEF53){
+    if (sp->s_magic != 0xEF53)
+    {
         printf("NOT an EXT2 FS\n");
         exit(1);
     }
@@ -83,55 +85,51 @@ int mount_root()
     
     root = iget(dev, 2);    /* get root inode */
 
-   // Let cwd of both P0 and P1 point at the root minode (refCount=3) ??? TODO
+    // Let cwd of both P0 and P1 point at the root minode (refCount=3) ??? TODO
     proc[0].cwd = iget(dev, 2); 
     proc[1].cwd = iget(dev, 2);
     printf("root refCount = %d\n", root->refCount);
 
-    //Let running -> P0.
+    //Let running -> P0
     running = &proc[0];
+
+    return 0;
 }
 
 int main()
 {
+    init();
+    mount_root();
 
-   init();
-   mount_root();
-
-    while(1){
-    //  ask for a command line = "cmd [pathname]"
-        
+    while(1)
+    {
         printf("Enter a command : [ls|cd|pwd|quit]\n");
-        fgets(command, 128, stdin);
-        command[strlen(command) -1] = 0; // kill \n at end of line
+        fgets(line, 256, stdin);
+        line[strlen(line) - 1] = '\0'; // kill \n at end of line
         
-        char * s;
-        int i  = 0;
+        strcpy(command, strtok(line, " "));
+        tokenize(strtok(NULL, "\n"), " ");  // Tokenize the rest of the line to get args
 
-        s = strtok(command, " ");
-        cmdArr[0] = s;
-        s = strtok(NULL, " ");
-        cmdArr[1] = s;
-
-        if(strcmp(cmdArr[0], "ls") == 0)
+        // TODO: Redo this with function pointers
+        if(!strcmp(command, "ls"))
         {
-            ls_dir(cmdArr[1]);
+            // ls_dir(tokens[0]);
         }
-        if(strcmp(cmdArr[0], "pwd") == 0)
+        if(!strcmp(command, "pwd"))
         {
             pwd(running->cwd);
         }
-        if(strcmp(cmdArr[0], "cd") == 0)
+        if(!strcmp(command, "cd"))
         {
-            cd(cmdArr[1]);
+            cd(tokens[0]);
         }
-        if(strcmp(cmdArr[0], "quit") == 0)
+        if(!strcmp(command, "quit"))
         {
             quit();
-        
         }
 
-
-         memset(command, 0, 100);
+        memset(command, 0, 128);
     }
+
+    return 1;  // Somehow got out of loop?
 }

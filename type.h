@@ -5,10 +5,11 @@
 #include <ext2fs/ext2_fs.h>
 #include <string.h>
 #include <libgen.h>
-#include <sys/stat.h>
+#include <sys/stat.h>  // TODO: Remove this, we shouldn't be using it
 
-#include <unistd.h>
+#include <unistd.h>  // TODO: Remove this, we shouldn't be using it
 
+/*************** CONST *********************************/
 #define BLKSIZE  1024
 
 #define NMINODE    64
@@ -17,7 +18,7 @@
 #define NMOUNT      4
 #define NPROC       2
 
-/*************** type.h file *********************************/
+/*************** TYPES *********************************/
 typedef unsigned char  u8;
 typedef unsigned short u16;
 typedef unsigned int   u32;
@@ -31,8 +32,6 @@ SUPER *sp;
 GD    *gp;
 INODE *ip;
 DIR   *dp;   
-
-
 
 typedef struct minode{
   INODE INODE;
@@ -58,27 +57,28 @@ typedef struct proc{
   OFT         *fd[NFD];
 }PROC;
 
+/*************** GLOBALS *********************************/
 
 extern MINODE minode[NMINODE];
 extern MINODE *root;
 extern PROC   proc[NPROC], *running;
-extern char gpath[128];
-extern char *name[64];
+extern char *tokens[64];
 extern int n;
 extern int fd, dev;
 extern int nblocks, ninodes, bmap, imap, inode_start;
 extern char line[256],  pathname[256], command[128];
 
- int get_block(int fd, int blk, char buf[ ]);
- int put_block(int fd, int blk, char buf[ ]);
+/*************** FUNCTIONS *********************************/
+// UTIL.C
+int get_block(int fd, int blk, char buf[ ]);
+int put_block(int fd, int blk, char buf[ ]);
+int tokenize(char *pathname, char *delim);
+MINODE *iget(int dev, int ino);
+int iput(MINODE *mip);
+int getino(char *pathname);
+int search(INODE *ip, char *name);
 
- int tokenize(char *pathname);
- MINODE *iget(int dev, int ino);
- int iput(MINODE *mip) ;
- int getino(char *pathname);
-
-int search(MINODE *mip, char *name);
-int ls_dir(char* dirname);
+// COMMANDS
 int pwd(MINODE *wd);
 int cd(char* dirname);
 int quit();
