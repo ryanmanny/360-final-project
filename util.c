@@ -1,16 +1,8 @@
 /************** util.c file ****************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <ext2fs/ext2_fs.h>
-#include <string.h>
-#include <libgen.h>
-#include <sys/stat.h>
 #include "type.h"
 
 int dev, inode_start;
 char *tokens[64]; // assume at most 64 components in pathnames
-
 
 /**** globals defined in main.c file ****/
 int get_block(int fd, int blk, char buf[ ])
@@ -35,6 +27,7 @@ int tokenize(char *pathname, char *delim)
     
     char *s = strtok(pathname, delim);  // first call to strtok()
     if (!s) return 0;
+    else tokens[count++] = s;
 
     // Call strtok() until it returns NULL
     while ((tokens[count++] = strtok(NULL, delim)));
