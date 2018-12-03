@@ -2,30 +2,38 @@
 
 MINODE *root;
 
-int rpwd(MINODE * wd)
+int rpwd(MINODE *wd)
 {
+    char buf[BLKSIZE], dirname[BLKSIZE];
+    int my_ino, parent_ino;
+
+    DIR* dp;
+    char* cp;
+
+    MINODE* pip;  // Parent MINODE
+
     if (wd == root)
     {
         return 0;
     }
 
-    char buf[BLKSIZE], dirname[BLKSIZE];
-    
-    int my_ino = 0, parent_ino = 0;
+    // Get dir block of cwd
     get_block(dev, wd->INODE.i_block[0], buf);
-    DIR* dp = (DIR *) buf;
-    char* cp = buf;
+    dp = (DIR *) buf;
+    cp = buf;
 
+    // Searches through cwd for cwd and parent ino
+    // TODO: Replace with search?
     while(cp < buf + BLKSIZE)
     {
         strcpy(dirname, dp->name);
         dirname[dp->name_len] = '\0';
         
-        if(strcmp(dirname, ".") == 0)
+        if(!strcmp(dirname, "."))
         {
             my_ino = dp->inode;
         }
-        if(strcmp(dirname, "..") == 0)
+        if(!strcmp(dirname, ".."))
         {
             parent_ino = dp->inode;
         }
@@ -34,7 +42,7 @@ int rpwd(MINODE * wd)
         dp = (DIR*) cp;
     }
 
-    MINODE* pip = iget(dev, parent_ino);
+    pip = iget(dev, parent_ino);
     get_block(dev, pip->INODE.i_block[0], buf);
     dp = (DIR *) buf;
     cp = buf;

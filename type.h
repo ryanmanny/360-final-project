@@ -42,6 +42,11 @@ typedef struct minode{
   struct mntable *mptr;
 }MINODE;
 
+typedef struct inode_location{
+  int block;
+  int offset;
+}INODE_LOCATION;
+
 typedef struct oft{
   int  mode;
   int  refCount;
@@ -77,6 +82,7 @@ MINODE *iget(int dev, int ino);
 int iput(MINODE *mip);
 int getino(char *pathname);
 int search(INODE *ip, char *name);
+INODE_LOCATION mailman(int ino);
 
 // COMMANDS
 int pwd(MINODE *wd);

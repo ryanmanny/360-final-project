@@ -47,7 +47,8 @@ MINODE *iget(int dev, int ino)
 {
     MINODE * mip;
     char buf[BLKSIZE];
-    int i, blk, offset;
+    int i;
+    INODE_LOCATION location;
     
     /*(1). Search minode[ ] for an existing entry (refCount > 0) with 
        the needed (dev, ino):
@@ -79,11 +80,10 @@ MINODE *iget(int dev, int ino)
     }
 
     //*(3). load INODE of (dev, ino) into mip->INODE:
-    blk    = (ino-1) / 8 + inode_start;
-    offset = (ino-1) % 8;
+    location = mailman(ino);
 
-    get_block(dev, blk, buf);
-    ip = (INODE *) buf + offset;
+    get_block(dev, location.block, buf);
+    ip = (INODE *) buf + location.offset;
     mip->INODE = *ip;  // copy INODE to mp->INODE
 
     return mip;
@@ -92,18 +92,19 @@ MINODE *iget(int dev, int ino)
 int iput(MINODE *mip) // dispose a used minode by mip
 {
     char buf[BLKSIZE];
+    INODE_LOCATION location;
+
     mip->refCount--;
 
     if (mip->refCount > 0) return 0;
     if (!mip->dirty)       return 0;
 
-    int pos    = (mip->ino - 1) / 8 + inode_start;
-    int offset = (mip->ino - 1) / 8;
+    location = mailman(mip->ino);
 
-    get_block(dev, pos, buf);
+    get_block(dev, location.block, buf);
     // INODE* ip = (INODE*) buf + offset;
     // TODO: We're missing the part where we overrite the INODE on disk!!!
-    put_block(dev, pos, buf);
+    put_block(dev, location.block, buf);
 
     return 0;
 }
@@ -167,7 +168,7 @@ int getino(char *pathname)
         }
         ip = &iget(dev, ino)->INODE;
     }
-    return  ino;
+    return ino;
 }
 
 int quit(void)
@@ -180,4 +181,12 @@ int quit(void)
         }
     }
     exit(0);
+}
+
+INODE_LOCATION mailman(int ino)
+{
+    INODE_LOCATION location;
+    location.block  = (ino - 1) / 8 + inode_start;
+    location.offset = (ino - 1) % 8;
+    return location;
 }
