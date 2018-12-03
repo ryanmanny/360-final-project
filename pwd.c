@@ -1,6 +1,7 @@
 #include "type.h"
 
 MINODE *root;
+PROC   proc[NPROC], *running;
 
 int rpwd(MINODE *wd)
 {
@@ -69,8 +70,10 @@ int rpwd(MINODE *wd)
     return 0;
 }
 
-int pwd(MINODE *wd)
+int pwd(char *args[])
 {
+    MINODE *wd = running->cwd;
+
     if(wd == root)
     {
         printf("/");

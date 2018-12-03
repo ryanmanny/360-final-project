@@ -2,7 +2,7 @@ COMP    = gcc
 CFLAGS  = -g -Wall
 RM      = rm -f
 BINNAME = final.bin
-FILES   = main.c util.c cd.c pwd.c
+FILES   = main.c util.c cd.c pwd.c quit.c
 
 default: build
 
