@@ -5,9 +5,6 @@
 #include <ext2fs/ext2_fs.h>
 #include <string.h>
 #include <libgen.h>
-#include <sys/stat.h>  // TODO: Remove this, we shouldn't be using it
-
-#include <unistd.h>  // TODO: Remove this, we shouldn't be using it
 
 /*************** CONST *********************************/
 #define BLKSIZE  1024
