@@ -5,7 +5,7 @@ MINODE *root;
 
 int  dev;
 
-int creat(char* args[])
+int creat_file(char* args[])
 {
     char* path = args[0];
     char parent_path[128], filename[128];

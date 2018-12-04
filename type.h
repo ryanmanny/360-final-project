@@ -98,4 +98,4 @@ int quit(char *args[]);
 int ls(char *args[]);
 int my_link(char *args[]);
 int make_dir(char *args[]);
-int creat(char* args[]);
+int creat_file(char* args[]);

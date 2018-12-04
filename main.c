@@ -36,7 +36,7 @@ int (*cmds[])(char **) = {
     cd,
     make_dir,
     // rmdir ,
-    creat,
+    creat_file,
     my_link
     // symlink,
     // unlink,
