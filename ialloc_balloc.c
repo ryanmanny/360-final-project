@@ -25,17 +25,17 @@ int fd;
 int imap, bmap;  // IMAP and BMAP block number
 int ninodes, nblocks, nfreeInodes, nfreeBlocks;
 
-int get_block(int fd, int blk, char buf[ ])
-{
-  lseek(fd, (long)blk*BLKSIZE, 0);
-  read(fd, buf, BLKSIZE);
-}
+// int get_block(int fd, int blk, char buf[ ])
+// {
+//   lseek(fd, (long)blk*BLKSIZE, 0);
+//   read(fd, buf, BLKSIZE);
+// }
 
-int put_block(int fd, int blk, char buf[ ])
-{
-  lseek(fd, (long)blk*BLKSIZE, 0);
-  write(fd, buf, BLKSIZE);
-}
+// int put_block(int fd, int blk, char buf[ ])
+// {
+//   lseek(fd, (long)blk*BLKSIZE, 0);
+//   write(fd, buf, BLKSIZE);
+// }
 
 int tst_bit(char *buf, int bit)
 {
