@@ -213,7 +213,7 @@ int getdir(INODE *ip, char *pathname)
     }
 }
 
-int insert_entry(MINODE *dir, MINODE *file, char *filename)
+int insert_entry(MINODE *dir, DIR *file, char *filename)
 {
     
 }

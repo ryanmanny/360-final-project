@@ -84,7 +84,7 @@ int getino(char *pathname);
 int search(INODE *ip, char *name);
 INODE_LOCATION mailman(int ino);
 int getdir(INODE* ip, char *pathname);
-int insert_entry(MINODE *dir, MINODE *file, char *filename);
+int insert_entry(MINODE *dir, DIR *file, char *filename);
 
 // COMMANDS
 int pwd(char *args[]);
