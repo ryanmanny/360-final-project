@@ -16,7 +16,7 @@ char *cmd_strs[] = {
     "make_dir",
     // "rmdir ",
     // "creat",
-    // "link",
+    "link"
     // "symlink",
     // "unlink",
     // "chmod",
@@ -34,10 +34,10 @@ int (*cmds[])(char **) = {
     ls,
     pwd,
     cd,
-    make_dir
+    make_dir,
     // rmdir ,
     // creat,
-    // link,
+    my_link
     // symlink,
     // unlink,
     // chmod,

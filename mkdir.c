@@ -134,7 +134,7 @@ int enter_name(MINODE* pip, int myino, char* myname)
   
         dp = (DIR *)buf;
         cp = buf;
-        int need_length = calculate_ideal_length(dp->name);
+        int need_length = ideal_len(dp->name);
         /// blk is last entry in block
         int blk = pip->INODE.i_block[i];
 

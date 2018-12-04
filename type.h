@@ -83,13 +83,14 @@ int iput(MINODE *mip);
 int getino(char *pathname);
 int search(INODE *ip, char *name);
 INODE_LOCATION mailman(int ino);
-
 int getdir(INODE* ip, char *pathname);
 int insert_entry(MINODE *dir, DIR *file, char *filename);
+int ideal_len(DIR *dirent);
+
 // COMMANDS
 int pwd(char *args[]);
 int cd(char *args[]);
 int quit(char *args[]);
 int ls(char *args[]);
-int link(char *args[]);
-int make_dir(char* args[]);
+int my_link(char *args[]);
+int make_dir(char *args[]);

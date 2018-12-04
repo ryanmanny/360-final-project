@@ -230,7 +230,7 @@ int insert_entry(MINODE *dir, DIR *file, char *filename)
   
         dp = (DIR *)buf;
         cp = buf;
-        int need_length = calculate_ideal_length(dp->name_len);
+        int need_length = ideal_len(dp);
         /// blk is last entry in block
         int blk = dir->INODE.i_block[i];
 
@@ -269,10 +269,7 @@ int insert_entry(MINODE *dir, DIR *file, char *filename)
     }
 }
 
-
-int calculate_ideal_length(DIR* dp)
+int ideal_len(DIR* dirent)
 {
     return 4 * ((8 + dp->name_len + 3) / 4);
 }
-
-

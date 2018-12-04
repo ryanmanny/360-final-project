@@ -1,9 +1,10 @@
 #include "type.h"
 
+char buf[BLKSIZE];
 PROC *running;
 
 // FUNCTIONS
-int link(char *args[])
+int my_link(char *args[])
 {
     char filename[256];
     int src_ino, dest_ino;
@@ -57,14 +58,25 @@ int link(char *args[])
     src_ino = search(&wd->INODE, src);
 
     MINODE *to_link = iget(dev, src_ino);
-    MINODE *dmip = iget(dev, dest_ino);
+    MINODE *dir = iget(dev, dest_ino);
 
-    // CREATE THE LINK
+    // Add the link to the directory
     DIR entry;
     entry.inode = to_link->ino;
     entry.name_len = strlen(filename);
-    entry.rec_len = calculate_ideal_length(&entry);
     strcpy(entry.name, filename);
+    entry.rec_len = ideal_len(&entry);
 
-    insert_entry(dmip, &entry, filename);
+    insert_entry(dir, &entry, filename);
+
+    iput(to_link);
+    iput(dir);
+
+    // Update the refCount in memory
+    INODE_LOCATION location = mailman(to_link->ino);
+
+    get_block(dev, location.block, buf);
+    INODE *link = (INODE *) buf + location.offset;
+    link->i_links_count++;
+    put_block(dev, location.block, buf);
 }
