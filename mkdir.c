@@ -14,7 +14,7 @@ int  fd, dev;
 int  nblocks, ninodes, bmap, imap, inode_start;
 char cmd[32], pathname[64];
 
-int make_dir(char ** args)
+int make_dir(char* args[])
 {
     MINODE * mip;
     char* path = args[0];
@@ -87,7 +87,7 @@ int mymkdir(MINODE *pip, char *name, int parentIno)
     MINODE* mip = iget(dev, ino);
     INODE *ip = &mip->INODE;
 
-    ip->i_mode = 0X41ED;
+    ip->i_mode = 040755;
     ip->i_uid  = running->uid;	// Owner uid 
     ip->i_gid  = running->gid;	// Group Id
     ip->i_size = BLKSIZE;		// Size in bytes 
@@ -134,7 +134,7 @@ int enter_name(MINODE* pip, int myino, char* myname)
   
         dp = (DIR *)buf;
         cp = buf;
-        int need_length = 4 * ((8 + dp->name_len + 3) / 4);
+        int need_length = calculate_ideal_length(dp->name);
         /// blk is last entry in block
         int blk = pip->INODE.i_block[i];
 
@@ -148,13 +148,15 @@ int enter_name(MINODE* pip, int myino, char* myname)
         if(remain >= need_length)
         {
             dp->rec_len = need_length;
+            
             cp += dp->rec_len;
             dp = (DIR *)cp;
             dp->inode = myino;
             dp->name_len = strlen(myname);
             dp->rec_len = remain;
             strcpy(dp->name, myname);
-            put_block(fd, blk, buf);
+            dp->file_type = 2;
+            put_block(fd, ip->i_block[i], buf);
         }
         else
         {
@@ -167,6 +169,7 @@ int enter_name(MINODE* pip, int myino, char* myname)
             dp->inode = myino;
             dp->name_len = strlen(myname);
             strcpy(dp->name, myname);
+           put_block(fd, ip->i_block[i + 1], buf);
         }   
     }
 }
