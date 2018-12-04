@@ -220,19 +220,20 @@ int getdir(INODE *ip, char *pathname)
 
 int insert_entry(MINODE *dir, DIR *file)
 {
+    int blk, required;
     char buf[BLKSIZE], *cp;
     for (int i = 0; i < 12; i++)
     {
-        int blk = dir->INODE.i_block[i];
+        blk = dir->INODE.i_block[i];
 
-        if(dir->INODE.i_block[i] == 0)
+        if (!dir->INODE.i_block[i])
             break;
 
         get_block(dev, blk, buf);
   
         dp = (DIR *)buf;
         cp = buf;
-        int required = ideal_len(dp);
+        required = ideal_len(dp);
         
         // Find last entry in dir
         while (cp + dp->rec_len < buf + BLKSIZE)
@@ -255,6 +256,11 @@ int insert_entry(MINODE *dir, DIR *file)
 
             put_block(fd, blk, buf);
         }
+        else
+        {
+            printf("Raise NotImplementedException we need to allocate another block");
+            return 1;
+        }
         // else
         // {
         //     int bno = balloc(dev);
@@ -269,6 +275,8 @@ int insert_entry(MINODE *dir, DIR *file)
         //     put_block(fd, ip->i_block[i + 1], buf);
         // }   
     }
+
+    return 0;
 }
 
 int ideal_len(DIR* dirent)
