@@ -20,12 +20,12 @@ int put_block(int fd, int blk, char buf[ ])
     write(fd, buf, BLKSIZE);
 
     return 0;
-}  
+}
 
 int tokenize(char *str, char *delim, char *tokens[])
 {
     int count = 0;
-    
+
     char *temp = strtok(str, delim);  // first call to strtok()
     if (!temp) return 0;
     else tokens[count++] = temp;
@@ -43,8 +43,8 @@ MINODE *iget(int dev, int ino)
     char buf[BLKSIZE];
     int i;
     INODE_LOCATION location;
-    
-    /*(1). Search minode[ ] for an existing entry (refCount > 0) with 
+
+    /*(1). Search minode[ ] for an existing entry (refCount > 0) with
        the needed (dev, ino):
        if found: inc its refCount by 1;
             return pointer to this minode;*/
@@ -108,10 +108,10 @@ int search(INODE *ip, char *name)
     // Returns ino of name if it exists in ip
     char buf[BLKSIZE];
     char dirname[EXT2_NAME_LEN];
-    
+
     char* cp;
     DIR * dp;
-    
+
     for(int i = 0; i < 12; i++)
     {
         if(!ip->i_block[i])
@@ -128,7 +128,7 @@ int search(INODE *ip, char *name)
         {
             strncpy(dirname, dp->name, dp->name_len);
             dirname[dp->name_len] = '\0';
-    
+
             if(!strcmp(dirname, name))
             {
                 return dp->inode;
@@ -138,7 +138,9 @@ int search(INODE *ip, char *name)
             dp = (DIR*) cp;
         }
     }
-    return 0;
+
+    // Couldn't find ino
+    return -1;
 }
 
 int getino(char *pathname)
@@ -148,7 +150,7 @@ int getino(char *pathname)
 
     int ino;
     int n = tokenize(pathname, "/", tokens);
-    
+
     get_block(dev, inode_start, buf);
     INODE* ip = (INODE*) buf + 1;
 
@@ -171,4 +173,52 @@ INODE_LOCATION mailman(int ino)
     location.block  = (ino - 1) / 8 + inode_start;
     location.offset = (ino - 1) % 8;
     return location;
+}
+
+int getdir(char *pathname)
+{
+    // Tries to get a valid directory from pathname
+    char parent_path[256];
+    int dest_ino;
+    MINODE *wd;
+
+    strcpy(parent_path, pathname);
+
+    if (pathname[0] == '/')
+    {
+        wd = root;
+        pathname++;
+    }
+    else
+    {
+        wd = running->cwd;
+    }
+    dest_ino = search(&wd->INODE, pathname);
+
+    if (dest_ino < 0)
+    {
+        // Try the parent, maybe the file doesn't exist yet
+        dirname(parent_path);
+        dest_ino = search(&wd->INODE, parent_path);
+    }
+
+    if (dest_ino < 0)
+    {
+        printf("%s does not exist\n", parent_path);
+        return -1;
+    }
+    else
+    {
+        // File exists: Check if it's a file or a dir
+        MINODE *mip = iget(dev, dest_ino);
+        if (!S_ISDIR(mip->INODE.i_mode))
+        {
+            printf("%s already exists\n", parent_path);
+            return -1;
+        }
+        else
+        {
+            return dest_ino;
+        }
+    }
 }
