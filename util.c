@@ -31,7 +31,10 @@ int tokenize(char *str, char *delim, char *tokens[])
     else tokens[count++] = temp;
 
     // Call strtok() until it returns NULL
-    while ((tokens[count++] = strtok(NULL, delim)));
+    while ((tokens[count] = strtok(NULL, delim)))
+    {
+        count++;
+    }
 
     // Return # of tokens
     return count;

@@ -12,7 +12,7 @@ int  n;            // number of token strings
 
 int  fd, dev;
 int  nblocks, ninodes, bmap, imap, inode_start;
-char line[128], cmd[32], pathname[64];
+char cmd[32], pathname[64];
 
 int make_dir(char ** args)
 {
@@ -35,8 +35,9 @@ int make_dir(char ** args)
     /// basename and dirname destroy original string, so gotta make new copies of them
     strcpy(parentPath, path);
     strcpy(childPath, path);
-    char * parent = dirname(parentPath);
-    char* child = basename(childPath);
+    char parent[BLKSIZE], child[BLKSIZE];
+    strcpy(parent, dirname(parentPath));
+    strcpy(child, basename(childPath));
 
     int pino;
     MINODE* pip;
@@ -153,6 +154,7 @@ int enter_name(MINODE* pip, int myino, char* myname)
             dp->name_len = strlen(myname);
             dp->rec_len = remain;
             strcpy(dp->name, myname);
+            put_block(fd, blk, buf);
         }
         else
         {
