@@ -87,7 +87,7 @@ int mymkdir(MINODE *pip, char *name, int parentIno)
     MINODE* mip = iget(dev, ino);
     INODE *ip = &mip->INODE;
 
-    ip->i_mode = 040755;
+    ip->i_mode = (0x41ED);
     ip->i_uid  = running->uid;	// Owner uid 
     ip->i_gid  = running->gid;	// Group Id
     ip->i_size = BLKSIZE;		// Size in bytes 
@@ -102,7 +102,6 @@ int mymkdir(MINODE *pip, char *name, int parentIno)
         ip->i_block[i] = 0;
     mip->dirty = 1;
 
-    iput(mip);
 
     DIR* dp = (DIR*) buf;
     dp->inode = ino;
@@ -118,25 +117,45 @@ int mymkdir(MINODE *pip, char *name, int parentIno)
 
     put_block(dev, bno, buf);
     enter_name(pip, ino, name);
+
+    iput(mip);
+    iput(pip);
 }
 
 int enter_name(MINODE* pip, int myino, char* myname)
 {
     int i = 0;
     char buf[BLKSIZE], *cp;
+    int need_length = ideal_len(myname);
     for(i = 0; i < 12; i ++ )
     {
+                dp = (DIR *)buf;
+        cp = buf;
+
         if(pip->INODE.i_block[i] == 0)
-            break;
+        {
+            pip->INODE.i_block[i] = balloc(dev);
+            get_block(pip->dev, pip->INODE.i_block[i], buf);
+        //     int bno = balloc(dev);
+            printf("blarg 2\n");
+        //     pip->INODE.i_size += BLKSIZE;
+        //     get_block(dev, bno, buf);
+        //     dp = (DIR*) dp;
+        //     cp= buf;
+        dp->rec_len = BLKSIZE;
+        dp->inode = myino;
+        dp->name_len = strlen(myname);
+        strcpy(dp->name, myname);
+        //    put_block(pip->dev, pip->INODE.i_block[i], buf);
+          
+        }
 
         // get parent's ith data block into a buf[ ] 
-        get_block(dev, pip->INODE.i_block[i], buf);
+        get_block(pip->dev, pip->INODE.i_block[i], buf);
   
-        dp = (DIR *)buf;
-        cp = buf;
-        int need_length = ideal_len(dp->name);
+
         /// blk is last entry in block
-        int blk = pip->INODE.i_block[i];
+       int blk = pip->INODE.i_block[i];
 
         printf("step to LAST entry in data block %d\n", blk);
         while (cp + dp->rec_len < buf + BLKSIZE){
@@ -147,6 +166,7 @@ int enter_name(MINODE* pip, int myino, char* myname)
         int remain = dp->rec_len - need_length;
         if(remain >= need_length)
         {
+            printf("blarg 1\n");
             dp->rec_len = need_length;
             
             cp += dp->rec_len;
@@ -155,21 +175,9 @@ int enter_name(MINODE* pip, int myino, char* myname)
             dp->name_len = strlen(myname);
             dp->rec_len = remain;
             strcpy(dp->name, myname);
-            dp->file_type = 2;
-            put_block(fd, ip->i_block[i], buf);
+            put_block(pip->dev, pip->INODE.i_block[i], buf);
+            return 1;
         }
-        else
-        {
-            int bno = balloc(dev);
-            pip->INODE.i_size += BLKSIZE;
-            get_block(dev, bno, buf);
-            dp = (DIR*) dp;
-            cp= buf;
-            dp->rec_len = need_length;
-            dp->inode = myino;
-            dp->name_len = strlen(myname);
-            strcpy(dp->name, myname);
-           put_block(fd, ip->i_block[i + 1], buf);
-        }   
+    
     }
 }

@@ -92,6 +92,7 @@ int iput(MINODE *mip) // dispose a used minode by mip
     INODE_LOCATION location;
 
     mip->refCount--;
+    //printf("iput  -- refCount: %d\n", mip->refCount);
 
     if (mip->refCount > 0) return 0;
     if (!mip->dirty)       return 0;
@@ -101,6 +102,8 @@ int iput(MINODE *mip) // dispose a used minode by mip
     get_block(dev, location.block, buf);
     // INODE* ip = (INODE*) buf + offset;
     // TODO: We're missing the part where we overrite the INODE on disk!!!
+    INODE * ip = (INODE*) buf + location.offset;
+    *ip = mip->INODE;
     put_block(dev, location.block, buf);
 
     return 0;
