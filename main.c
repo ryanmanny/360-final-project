@@ -3,12 +3,70 @@
 MINODE minode[NMINODE];
 MINODE *root;
 PROC   proc[NPROC], *running;
-char *name[64];
+char *cmd_args[64];
 int fd, dev;
 int nblocks, ninodes, bmap, imap, inode_start;
-char line[256], pathname[256], command[128];
-char *cmd_args[128];
+char line[256], command[128], cmd_arg_str[128];
 
+// FUNCTION POINTER TABLE
+char *cmd_strs[] = {
+    // "ls",
+    "pwd",
+    "cd"
+    // "mkdir",
+    // "rmdir ",
+    // "creat",
+    // "link",
+    // "symlink",
+    // "unlink",
+    // "chmod",
+    // "touch",
+    // "stat",
+    // "cat ",
+    // "cp",
+    // "mv",
+    // "mount",
+    // "umount"
+};
+
+int (*cmds[])(char **) = {
+    (int (*)()) 
+    // ls,
+    pwd,
+    cd
+    // mkdir
+    // rmdir ,
+    // creat,
+    // link,
+    // symlink,
+    // unlink,
+    // chmod,
+    // touch,
+    // stat,
+    // cat ,
+    // cp,
+    // mv,
+    // mount,
+    // umount
+};
+
+int run_command(char *cmd, char *args)
+{
+    int num_commands = sizeof(cmd_strs) / sizeof(char *);
+
+    for (int i = 0; i < num_commands; i++)
+    {
+        if (!strcmp(cmd, cmd_strs[i]))
+        {
+            tokenize(args, " ", cmd_args);
+            return cmds[i](cmd_args);
+        }
+    }
+    puts("Invalid command!");
+    return -1;
+}
+
+// FUNCTIONS
 int init()
 {
     int i;
@@ -101,34 +159,24 @@ int main()
     init();
     mount_root();
 
+    char *temp;
+
     while(1)
     {
-        printf("Enter a command : [ls|cd|pwd|quit]\n");
+        printf("Enter a command:\n");  // TODO: Dynamically print valid commands
         fgets(line, 256, stdin);
         line[strlen(line) - 1] = '\0'; // kill \n at end of line
         
         strcpy(command, strtok(line, " "));
-        tokenize(strtok(NULL, "\n"), " ");  // Tokenize the rest of the line to get args
+        temp = strtok(NULL, "\n");
+        if (temp)
+            strcpy(cmd_arg_str, temp);  // Tokenize the rest of the line to get args
+        else
+            strcpy(cmd_arg_str, "");
 
-        // TODO: Redo this with function pointers
-        if(!strcmp(command, "ls"))
-        {
-            // ls_dir(tokens[0]);
-        }
-        if(!strcmp(command, "pwd"))
-        {
-            pwd(running->cwd);
-        }
-        if(!strcmp(command, "cd"))
-        {
-            cd(tokens[0]);
-        }
-        if(!strcmp(command, "quit"))
-        {
-            quit();
-        }
+        run_command(command, cmd_arg_str);
 
-        memset(command, 0, 128);
+        strcpy(line, "");  // Reset line for next part
     }
 
     return 1;  // Somehow got out of loop?
