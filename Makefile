@@ -1,5 +1,5 @@
 COMP    = gcc
-CFLAGS  = -g -Wall
+CFLAGS  = -g -Wall -std=c11
 RM      = rm -f
 BINNAME = final.bin
 FILES   = main.c util.c cd.c pwd.c quit.c ls.c
