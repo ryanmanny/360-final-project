@@ -32,6 +32,7 @@ int creat_file(char* args[])
     strcpy(parent_path, dirname(parent_path));  // Will be "." if inserting in cwd
     strcpy(filename, basename(filename));
 
+   
     pino = getino(parent_path);
     pip = iget(dev, pino);
 
@@ -39,7 +40,7 @@ int creat_file(char* args[])
     if (S_ISDIR(pip->INODE.i_mode))
     {
         // check child does not exist in parent directory
-        ino = search(mip, filename);
+        ino = search(pip, filename);
 
         if (ino > 0)
         {
