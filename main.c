@@ -12,8 +12,8 @@ char line[256], command[128], cmd_arg_str[128];
 char *cmd_strs[] = {
     "ls",
     "pwd",
-    "cd"
-    // "mkdir",
+    "cd",
+    "make_dir",
     // "rmdir ",
     // "creat",
     // "link",
@@ -33,8 +33,8 @@ int (*cmds[])(char **) = {
     (int (*)()) 
     ls,
     pwd,
-    cd
-    // mkdir
+    cd,
+    make_dir
     // rmdir ,
     // creat,
     // link,

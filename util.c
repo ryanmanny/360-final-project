@@ -31,7 +31,10 @@ int tokenize(char *str, char *delim, char *tokens[])
     else tokens[count++] = temp;
 
     // Call strtok() until it returns NULL
-    while ((tokens[count++] = strtok(NULL, delim)));
+    while ((tokens[count] = strtok(NULL, delim)))
+    {
+        count++;
+    }
 
     // Return # of tokens
     return count;
@@ -215,5 +218,61 @@ int getdir(INODE *ip, char *pathname)
 
 int insert_entry(MINODE *dir, DIR *file, char *filename)
 {
-    
+    int i = 0;
+    char buf[BLKSIZE], *cp;
+    for(i = 0; i < 12; i ++ )
+    {
+        if(dir->INODE.i_block[i] == 0)
+            break;
+
+        // get parent's ith data block into a buf[ ] 
+        get_block(dev, dir->INODE.i_block[i], buf);
+  
+        dp = (DIR *)buf;
+        cp = buf;
+        int need_length = calculate_ideal_length(dp->name_len);
+        /// blk is last entry in block
+        int blk = dir->INODE.i_block[i];
+
+        printf("step to LAST entry in data block %d\n", blk);
+        while (cp + dp->rec_len < buf + BLKSIZE){
+            cp += dp->rec_len;
+            dp = (DIR *)cp;
+        }
+
+        int remain = dp->rec_len - need_length;
+        if(remain >= need_length)
+        {
+            dp->rec_len = need_length;
+            
+            cp += dp->rec_len;
+            dp = (DIR *)cp;
+            dp->inode = file->inode;
+            dp->name_len = file->name_len;
+            dp->rec_len = remain;
+            strcpy(dp->name, file->name);
+            put_block(fd, ip->i_block[i], buf);
+        }
+        else
+        {
+            int bno = balloc(dev);
+            dir->INODE.i_size += BLKSIZE;
+            get_block(dev, bno, buf);
+            dp = (DIR*) dp;
+            cp= buf;
+            dp->rec_len = need_length;
+            dp->inode = file->inode;
+            dp->name_len = file->name_len;
+            strcpy(dp->name, file->name);
+            put_block(fd, ip->i_block[i + 1], buf);
+        }   
+    }
 }
+
+
+int calculate_ideal_length(DIR* dp)
+{
+    return 4 * ((8 + dp->name_len + 3) / 4);
+}
+
+
