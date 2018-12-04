@@ -178,31 +178,21 @@ INODE_LOCATION mailman(int ino)
     return location;
 }
 
-int getdir(char *pathname)
+int getdir(INODE *ip, char *pathname)
 {
     // Tries to get a valid directory from pathname
     char parent_path[256];
     int dest_ino;
-    MINODE *wd;
 
     strcpy(parent_path, pathname);
 
-    if (pathname[0] == '/')
-    {
-        wd = root;
-        pathname++;
-    }
-    else
-    {
-        wd = running->cwd;
-    }
-    dest_ino = search(&wd->INODE, pathname);
+    dest_ino = search(ip, pathname);
 
     if (dest_ino < 0)
     {
         // Try the parent, maybe the file doesn't exist yet
         dirname(parent_path);
-        dest_ino = search(&wd->INODE, parent_path);
+        dest_ino = search(ip, parent_path);
     }
 
     if (dest_ino < 0)
@@ -224,4 +214,9 @@ int getdir(char *pathname)
             return dest_ino;
         }
     }
+}
+
+int insert_entry(MINODE *dir, DIR *file, char *filename)
+{
+    
 }
