@@ -6,6 +6,10 @@
 #include <string.h>
 #include <libgen.h>
 
+// TODO: Remove these later
+#include <unistd.h>
+#include <sys/stat.h>
+
 /*************** CONST *********************************/
 #define BLKSIZE  1024
 
@@ -79,8 +83,10 @@ int iput(MINODE *mip);
 int getino(char *pathname);
 int search(INODE *ip, char *name);
 INODE_LOCATION mailman(int ino);
+int getdir(char *pathname);
 
 // COMMANDS
 int pwd(char *args[]);
 int cd(char *args[]);
 int quit(char *args[]);
+int ls(char *args[]);
