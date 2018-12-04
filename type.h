@@ -6,6 +6,8 @@
 #include <string.h>
 #include <libgen.h>
 
+#include <sys/stat.h>
+
 /*************** CONST *********************************/
 #define BLKSIZE  1024
 
@@ -79,6 +81,8 @@ int iput(MINODE *mip);
 int getino(char *pathname);
 int search(INODE *ip, char *name);
 INODE_LOCATION mailman(int ino);
+int create_entry(char *dest_pathname, MINODE *file);
+int getdir(char *pathname);
 
 // COMMANDS
 int pwd(char *args[]);
