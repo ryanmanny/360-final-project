@@ -67,7 +67,7 @@ int my_link(char *args[])
     strcpy(entry.name, filename);
     entry.rec_len = ideal_len(&entry);
 
-    insert_entry(dir, &entry, filename);
+    insert_entry(dir, &entry);
 
     iput(to_link);
     iput(dir);
@@ -79,4 +79,6 @@ int my_link(char *args[])
     INODE *link = (INODE *) buf + location.offset;
     link->i_links_count++;
     put_block(dev, location.block, buf);
+
+    return 0;
 }

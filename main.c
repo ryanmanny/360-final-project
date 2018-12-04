@@ -13,7 +13,7 @@ char *cmd_strs[] = {
     "ls",
     "pwd",
     "cd",
-    "make_dir",
+    "mkdir",
     // "rmdir ",
     // "creat",
     "link"

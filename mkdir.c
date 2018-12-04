@@ -1,183 +1,132 @@
 #include "type.h"
 
-
 MINODE minode[NMINODE];
 MINODE *root;
 
-PROC   proc[NPROC], *running;
-
-char gpath[128];   // hold tokenized strings
-char *name[64];    // token string pointers
-int  n;            // number of token strings 
-
-int  fd, dev;
-int  nblocks, ninodes, bmap, imap, inode_start;
-char cmd[32], pathname[64];
+int  dev;
 
 int make_dir(char* args[])
 {
-    MINODE * mip;
     char* path = args[0];
+    char parent_path[128], filename[128];
+
+    int ino, pino;
+    MINODE *mip, *pip;
 
     // path is pathname we wanna create
-    if(path[0] == '/')
+    if (path[0] == '/')
     {
         // absolute path
-        mip = root; 
+        mip = root;
         dev = root->dev;
     }
-    else{
+    else
+    {
         ///relative path
         mip = running->cwd;
         dev = running->cwd->dev;
-    }   
-    char parentPath[128], childPath[128];
-    /// basename and dirname destroy original string, so gotta make new copies of them
-    strcpy(parentPath, path);
-    strcpy(childPath, path);
-    char parent[BLKSIZE], child[BLKSIZE];
-    strcpy(parent, dirname(parentPath));
-    strcpy(child, basename(childPath));
+    }
+    
+    strcpy(parent_path, path);
+    strcpy(filename, path);
+    
+    strcpy(parent_path, dirname(parent_path));  // Will be "." if inserting in cwd
+    strcpy(filename, basename(filename));
 
-    int pino;
-    MINODE* pip;
-    pino = getino(parent);
+    pino = getino(parent_path);
     pip = iget(dev, pino);
-    char buf[BLKSIZE], *cp;
-    int childFound = 0;
 
-    //checking if parent INODE is a dir 
-    if(S_ISDIR(pip->INODE.i_mode))
+    // checking if parent INODE is a dir 
+    if (S_ISDIR(pip->INODE.i_mode))
     {
-        /// check child does not exist in parent directory
-        get_block(dev, pip->INODE.i_block[0], buf);
-        dp = (DIR *) buf;
-        cp = buf;
-        char dirname[EXT2_NAME_LEN];
-        int childINo = getino(child);
+        // check child does not exist in parent directory
+        ino = search(mip, filename);
 
-        while(cp < buf +  1024)
+        if (ino > 0)
         {
-            strcpy(dirname, dp->name);
-            dirname[dp->name_len] = '\0';
-            if(dp->inode == childINo)
-            {
-                //child exists in directory
-                childFound = 1;
-                break;
-            }
-            cp += dp->rec_len;
-            dp = (DIR*) cp;
+            printf("Child %s already exists\n", filename);
+            return 1;
         }
     }
-    mymkdir(pip, child, pino);
+
+    ino = newdir(pip);  // Allocates a new directory
     pip->INODE.i_links_count++;
+
+    DIR dirent;
+
+    dirent.inode = ino;
+    strncpy(dirent.name, filename, strlen(filename));
+    dirent.name_len = strlen(filename);
+    dirent.rec_len = ideal_len(&dirent);
+
+    insert_entry(pip, &dirent);
     
-    //touch its atime and mark it DIRTY
+    pip->INODE.i_atime = time(0L);
     pip->dirty = 1;
     iput(pip);
+
+    return 0;
 }
 
-int mymkdir(MINODE *pip, char *name, int parentIno)
+int newdir(MINODE *pip)
 {
-    int ino = ialloc(dev);
-    int bno = balloc(dev);
-     char buf[BLKSIZE], *cp;
+    int ino = ialloc(pip->dev);
+    int bno = balloc(pip->dev);
+    char buf[BLKSIZE];
 
-    MINODE* mip = iget(dev, ino);
-    INODE *ip = &mip->INODE;
+    // Allocate the new Directory
+    MINODE* mip = iget(pip->dev, ino);
+    INODE * ip  = &mip->INODE;
 
-    ip->i_mode = (0x41ED);
+    DIR* dp;
+    char *cp;
+
+    ip->i_mode = (0x41ED);      // Directory with 0??? permissions
     ip->i_uid  = running->uid;	// Owner uid 
     ip->i_gid  = running->gid;	// Group Id
     ip->i_size = BLKSIZE;		// Size in bytes 
-    ip->i_links_count = 2;	        // Links count=2 because of . and ..
-    ip->i_mtime = time(0L);
+    ip->i_links_count = 2;	    // Links count=2 because of . and ..
+    
+    ip->i_mtime = time(0L);     // Set all three timestamps to current time
     ip->i_ctime = ip->i_mtime;
-    ip->i_atime = ip->i_ctime;   // set to current time
-    ip->i_blocks = 2;                	// LINUX: Blocks count in 512-byte chunks 
-    ip->i_block[0] = bno;             // new DIR has one data block   
-    int i = 0;
-    for(i = 1; i < 15; i++)
-        ip->i_block[i] = 0;
-    mip->dirty = 1;
+    ip->i_atime = ip->i_ctime;
+    
+    ip->i_blocks = 2;           // LINUX: Blocks count in 512-byte chunks 
+    ip->i_block[0] = bno;       // new DIR has one data block   
 
+    for (int i = 1; i < 15; i++)
+    {
+        ip->i_block[i] = 0;     // Set all blocks to 0
+    }
+    
+    mip->dirty = 1;             // Set dirty for writeback
 
-    DIR* dp = (DIR*) buf;
+    // Initializing the newly allocated block
+    get_block(mip->dev, ip->i_block[0], buf);
+
+    dp = (DIR *) buf;
+    cp = buf;
+
+    // Create initial "." directory
+    strcpy(dp->name, ".");
     dp->inode = ino;
     dp->name_len = 1;
     dp->rec_len = 12;
-    strcpy(dp->name, ".");
+    
     cp += dp->rec_len;
     dp = (DIR*) cp;
-    dp->inode = parentIno;
-    dp->name_len = 2;
-    dp->rec_len = 1012;
+
+    // Create initial ".." directory
     strcpy(dp->name, "..");
+    dp->inode = pip->ino;
+    dp->name_len = 2;
+    dp->rec_len = 1012;  // Uses up the rest of the block
 
-    put_block(dev, bno, buf);
-    enter_name(pip, ino, name);
-
+    // Write back initialized dir block
+    put_block(mip->dev, ip->i_block[0], buf);
+    
     iput(mip);
     iput(pip);
-}
 
-int enter_name(MINODE* pip, int myino, char* myname)
-{
-    int i = 0;
-    char buf[BLKSIZE], *cp;
-    int need_length = ideal_len(myname);
-    for(i = 0; i < 12; i ++ )
-    {
-                dp = (DIR *)buf;
-        cp = buf;
-
-        if(pip->INODE.i_block[i] == 0)
-        {
-            pip->INODE.i_block[i] = balloc(dev);
-            get_block(pip->dev, pip->INODE.i_block[i], buf);
-        //     int bno = balloc(dev);
-            printf("blarg 2\n");
-        //     pip->INODE.i_size += BLKSIZE;
-        //     get_block(dev, bno, buf);
-        //     dp = (DIR*) dp;
-        //     cp= buf;
-        dp->rec_len = BLKSIZE;
-        dp->inode = myino;
-        dp->name_len = strlen(myname);
-        strcpy(dp->name, myname);
-        //    put_block(pip->dev, pip->INODE.i_block[i], buf);
-          
-        }
-
-        // get parent's ith data block into a buf[ ] 
-        get_block(pip->dev, pip->INODE.i_block[i], buf);
-  
-
-        /// blk is last entry in block
-       int blk = pip->INODE.i_block[i];
-
-        printf("step to LAST entry in data block %d\n", blk);
-        while (cp + dp->rec_len < buf + BLKSIZE){
-            cp += dp->rec_len;
-            dp = (DIR *)cp;
-        }
-
-        int remain = dp->rec_len - need_length;
-        if(remain >= need_length)
-        {
-            printf("blarg 1\n");
-            dp->rec_len = need_length;
-            
-            cp += dp->rec_len;
-            dp = (DIR *)cp;
-            dp->inode = myino;
-            dp->name_len = strlen(myname);
-            dp->rec_len = remain;
-            strcpy(dp->name, myname);
-            put_block(pip->dev, pip->INODE.i_block[i], buf);
-            return 1;
-        }
-    
-    }
+    return ino;
 }

@@ -92,7 +92,6 @@ int iput(MINODE *mip) // dispose a used minode by mip
     INODE_LOCATION location;
 
     mip->refCount--;
-    //printf("iput  -- refCount: %d\n", mip->refCount);
 
     if (mip->refCount > 0) return 0;
     if (!mip->dirty)       return 0;
@@ -100,10 +99,10 @@ int iput(MINODE *mip) // dispose a used minode by mip
     location = mailman(mip->ino);
 
     get_block(dev, location.block, buf);
-    // INODE* ip = (INODE*) buf + offset;
-    // TODO: We're missing the part where we overrite the INODE on disk!!!
-    INODE * ip = (INODE*) buf + location.offset;
-    *ip = mip->INODE;
+    
+    INODE *ip = (INODE*) buf + location.offset;
+    memcpy(ip, &mip->INODE, sizeof(INODE));
+
     put_block(dev, location.block, buf);
 
     return 0;
@@ -165,7 +164,7 @@ int getino(char *pathname)
         ino = search(ip, tokens[i]);
         if (!ino)
         {
-            printf("can't find %s\n", tokens[i]);
+            // printf("can't find %s\n", tokens[i]);
             break;
         }
         ip = &iget(dev, ino)->INODE;
@@ -219,60 +218,60 @@ int getdir(INODE *ip, char *pathname)
     }
 }
 
-int insert_entry(MINODE *dir, DIR *file, char *filename)
+int insert_entry(MINODE *dir, DIR *file)
 {
-    int i = 0;
     char buf[BLKSIZE], *cp;
-    for(i = 0; i < 12; i ++ )
+    for (int i = 0; i < 12; i++)
     {
+        int blk = dir->INODE.i_block[i];
+
         if(dir->INODE.i_block[i] == 0)
             break;
 
-        // get parent's ith data block into a buf[ ] 
-        get_block(dev, dir->INODE.i_block[i], buf);
+        get_block(dev, blk, buf);
   
         dp = (DIR *)buf;
         cp = buf;
-        int need_length = ideal_len(dp);
-        /// blk is last entry in block
-        int blk = dir->INODE.i_block[i];
-
-        printf("step to LAST entry in data block %d\n", blk);
-        while (cp + dp->rec_len < buf + BLKSIZE){
+        int required = ideal_len(dp);
+        
+        // Find last entry in dir
+        while (cp + dp->rec_len < buf + BLKSIZE)
+        {
             cp += dp->rec_len;
-            dp = (DIR *)cp;
+            dp = (DIR *) cp;
         }
 
-        int remain = dp->rec_len - need_length;
-        if(remain >= need_length)
+        int remain = dp->rec_len - required;
+        if (remain >= required)
         {
-            dp->rec_len = need_length;
+            dp->rec_len = required;
             
             cp += dp->rec_len;
             dp = (DIR *)cp;
             dp->inode = file->inode;
             dp->name_len = file->name_len;
             dp->rec_len = remain;
-            strcpy(dp->name, file->name);
-            put_block(fd, ip->i_block[i], buf);
+            strncpy(dp->name, file->name, file->name_len);
+
+            put_block(fd, blk, buf);
         }
-        else
-        {
-            int bno = balloc(dev);
-            dir->INODE.i_size += BLKSIZE;
-            get_block(dev, bno, buf);
-            dp = (DIR*) dp;
-            cp= buf;
-            dp->rec_len = need_length;
-            dp->inode = file->inode;
-            dp->name_len = file->name_len;
-            strcpy(dp->name, file->name);
-            put_block(fd, ip->i_block[i + 1], buf);
-        }   
+        // else
+        // {
+        //     int bno = balloc(dev);
+        //     dir->INODE.i_size += BLKSIZE;
+        //     get_block(dev, bno, buf);
+        //     dp = (DIR*) dp;
+        //     cp= buf;
+        //     dp->rec_len = need_length;
+        //     dp->inode = file->inode;
+        //     dp->name_len = file->name_len;
+        //     strcpy(dp->name, file->name);
+        //     put_block(fd, ip->i_block[i + 1], buf);
+        // }   
     }
 }
 
 int ideal_len(DIR* dirent)
 {
-    return 4 * ((8 + dp->name_len + 3) / 4);
+    return 4 * ((8 + dirent->name_len + 3) / 4);
 }
