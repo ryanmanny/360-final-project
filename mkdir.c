@@ -116,12 +116,55 @@ int mymkdir(MINODE *pip, char *name, int parentIno)
     strcpy(dp->name, "..");
 
     put_block(dev, bno, buf);
-    
+    enter_name(pip, ino, name);
 }
 
-
-
-void createEntry(char* name, MINODE * dir, MINODE* file)
+int enter_name(MINODE* pip, int myino, char* myname)
 {
-    
+    int i = 0;
+    char buf[BLKSIZE], *cp;
+    for(i = 0; i < 12; i ++ )
+    {
+        if(pip->INODE.i_block[i] == 0)
+            break;
+
+        // get parent's ith data block into a buf[ ] 
+        get_block(dev, pip->INODE.i_block[i], buf);
+  
+        dp = (DIR *)buf;
+        cp = buf;
+        int need_length = 4 * ((8 + dp->name_len + 3) / 4);
+        /// blk is last entry in block
+        int blk = pip->INODE.i_block[i];
+
+        printf("step to LAST entry in data block %d\n", blk);
+        while (cp + dp->rec_len < buf + BLKSIZE){
+            cp += dp->rec_len;
+            dp = (DIR *)cp;
+        }
+
+        int remain = dp->rec_len - need_length;
+        if(remain >= need_length)
+        {
+            dp->rec_len = need_length;
+            cp += dp->rec_len;
+            dp = (DIR *)cp;
+            dp->inode = myino;
+            dp->name_len = strlen(myname);
+            dp->rec_len = remain;
+            strcpy(dp->name, myname);
+        }
+        else
+        {
+            int bno = balloc(dev);
+            pip->INODE.i_size += BLKSIZE;
+            get_block(dev, bno, buf);
+            dp = (DIR*) dp;
+            cp= buf;
+            dp->rec_len = need_length;
+            dp->inode = myino;
+            dp->name_len = strlen(myname);
+            strcpy(dp->name, myname);
+        }   
+    }
 }
