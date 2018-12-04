@@ -6,6 +6,8 @@
 #include <string.h>
 #include <libgen.h>
 
+// TODO: Remove these later
+#include <unistd.h>
 #include <sys/stat.h>
 
 /*************** CONST *********************************/
@@ -87,3 +89,4 @@ int getdir(char *pathname);
 int pwd(char *args[]);
 int cd(char *args[]);
 int quit(char *args[]);
+int ls(char *args[]);
