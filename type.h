@@ -81,12 +81,13 @@ int put_block(int fd, int blk, char buf[ ]);
 int tokenize(char *pathname, char *delim, char **tokens);
 MINODE *iget(int dev, int ino);
 int iput(MINODE *mip);
-int getino(char *pathname);
+int getino(MINODE *mip, char *pathname);
 int search(INODE *ip, char *name);
 INODE_LOCATION mailman(int ino);
 int getdir(INODE* ip, char *pathname);
 int insert_entry(MINODE *dir, DIR *file);
 int ideal_len(DIR *dirent);
+void readlink();
 
 // ALLOC
 int ialloc(int dev);
@@ -99,4 +100,6 @@ int quit(char *args[]);
 int ls(char *args[]);
 int my_link(char *args[]);
 int my_mkdir(char *args[]);
-int creat(char* args[]);
+int my_creat(char* args[]);
+int my_symlink(char *args[]);
+int my_readlink(char *args[]);

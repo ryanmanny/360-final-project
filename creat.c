@@ -5,7 +5,40 @@ MINODE *root;
 
 int  dev;
 
-int creat(char* args[])
+int newfile(int dev)
+{
+    int ino = ialloc(dev);
+    int bno = balloc(dev);
+
+    // Allocate the new File
+    MINODE* mip = iget(dev, ino);
+    INODE * ip  = &mip->INODE;
+
+    ip->i_mode = (0x81A4);      // File with 0??? permissions
+    ip->i_uid  = running->uid;	// Owner uid 
+    ip->i_gid  = running->gid;	// Group Id
+    ip->i_size = 0;		// Size in bytes 
+    ip->i_links_count = 1;
+    
+    ip->i_mtime = time(0L);     // Set all three timestamps to current time
+    ip->i_ctime = ip->i_mtime;
+    ip->i_atime = ip->i_ctime;
+    
+    ip->i_blocks = 2;           // LINUX: Blocks count in 512-byte chunks 
+    ip->i_block[0] = bno;       // new DIR has one data block   
+
+    for (int i = 1; i < 15; i++)
+    {
+        ip->i_block[i] = 0;     // Set all blocks to 0
+    }
+    mip->dirty = 1;             // Set dirty for writeback
+
+    iput(mip);
+
+    return ino;
+}
+
+int my_creat(char* args[])
 {
     char *path = args[0];
     char parent_path[128], filename[128];
@@ -32,14 +65,14 @@ int creat(char* args[])
     strcpy(parent_path, dirname(parent_path));  // Will be "." if inserting in cwd
     strcpy(filename, basename(filename));
 
-    pino = getino(parent_path);
+    pino = getino(mip, parent_path);
     pip = iget(dev, pino);
 
     // checking if parent INODE is a dir 
     if (S_ISDIR(pip->INODE.i_mode))
     {
         // check child does not exist in parent directory
-        ino = search(pip, filename);
+        ino = search(&pip->INODE, filename);
 
         if (ino > 0)
         {
@@ -48,7 +81,7 @@ int creat(char* args[])
         }
     }
 
-    ino = newfile(pip);
+    ino = newfile(pip->dev);
     
     DIR dirent;
     dirent.inode = ino;
@@ -63,41 +96,4 @@ int creat(char* args[])
     
     iput(pip);
     return 0;
-}
-
-int newfile(int dev)
-{
-    int ino = ialloc(dev);
-    int bno = balloc(dev);
-    char buf[BLKSIZE];
-
-    // Allocate the new File
-    MINODE* mip = iget(dev, ino);
-    INODE * ip  = &mip->INODE;
-
-    DIR* dp;
-    char *cp;
-
-    ip->i_mode = (0x81A4);      // File with 0??? permissions
-    ip->i_uid  = running->uid;	// Owner uid 
-    ip->i_gid  = running->gid;	// Group Id
-    ip->i_size = 0;		// Size in bytes 
-    ip->i_links_count = 1;	    // Links count=2 because of . and ..
-    
-    ip->i_mtime = time(0L);     // Set all three timestamps to current time
-    ip->i_ctime = ip->i_mtime;
-    ip->i_atime = ip->i_ctime;
-    
-    ip->i_blocks = 2;           // LINUX: Blocks count in 512-byte chunks 
-    ip->i_block[0] = bno;       // new DIR has one data block   
-
-    for (int i = 1; i < 15; i++)
-    {
-        ip->i_block[i] = 0;     // Set all blocks to 0
-    }
-    mip->dirty = 1;             // Set dirty for writeback
-
-    iput(mip);
-
-    return ino;
 }

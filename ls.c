@@ -47,7 +47,7 @@ int ls(char *args[])
     char *dirname = args[0];
 
     int ino;
-    MINODE *mip;
+    MINODE *wd, *mip;
     DIR *dp;
     char *cp, temp[256], dbuf[BLKSIZE];
 
@@ -57,7 +57,16 @@ int ls(char *args[])
     }
     else
     {
-        ino = getino(dirname);
+        if (dirname[0] == '/')
+        {
+            wd = root;
+            dirname++;
+        }
+        else
+        {
+            wd = running->cwd;
+        }
+        ino = getino(wd, dirname);
     }
 
     mip = iget(dev, ino);
