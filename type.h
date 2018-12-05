@@ -117,3 +117,4 @@ int my_rmdir(char *args[]);
 int my_stat(char *args[]);
 int my_touch(char *args[]);
 int my_chmod(char *args[]);
+int my_menu(char* args[]);
