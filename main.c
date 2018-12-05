@@ -28,6 +28,7 @@ char *cmd_strs[] = {
     // "mv",
     // "mount",
     // "umount",
+    "menu",
     "quit"
 };
 
@@ -51,6 +52,7 @@ int (*cmds[])(char **) = {
     // mv,
     // mount,
     // umount,
+    my_menu,
     quit
 };
 

@@ -35,4 +35,5 @@ int my_touch(char* args[])
        mip->INODE.i_mtime = time(0L);
        mip->INODE.i_atime = mip->INODE.i_mtime;
    }
+   return 0;
 }
