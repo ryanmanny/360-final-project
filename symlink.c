@@ -23,7 +23,7 @@ int newsymlink(int dev, char *src)
     ip->i_mode = (0xA1A4);      // File with 0??? permissions
     ip->i_uid  = running->uid;	// Owner uid 
     ip->i_gid  = running->gid;	// Group Id
-    ip->i_size = 0;		// Size in bytes 
+    ip->i_size = strlen(src);   // Set size to length of name
     ip->i_links_count = 1;	    
     
     ip->i_mtime = time(0L);     // Set all three timestamps to current time

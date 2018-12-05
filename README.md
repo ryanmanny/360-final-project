@@ -13,15 +13,15 @@ Start with an empty disk for level-1
 - pwd ✓
 - cd ✓
 - mkdir ✓
-- rmdir 
+- rmdir ✓
 - creat ✓
 - link ✓
 - symlink ✓
 - readlink ✓
-- unlink
-- chmod
+- unlink ✓
+- chmod ✓
 - touch
-- stat
+- stat ✓
 
 ============================ LEVEL 2 =========================================
 

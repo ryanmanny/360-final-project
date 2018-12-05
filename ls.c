@@ -7,6 +7,10 @@ int ls_file(int ino, char *filename)
 {
     MINODE *mip = iget(dev, ino);
 
+    char entryname[512];
+    char linkname[84];
+    strcpy(entryname, filename);
+
     char *mask  = "rwxrwxrwx";
     char *bmask = "---------";
     int index = 0;
@@ -17,7 +21,12 @@ int ls_file(int ino, char *filename)
     if (S_ISDIR(mip->INODE.i_mode))
         filetype = 'd';  // DIR
     else if (S_ISLNK(mip->INODE.i_mode))
+    {
         filetype = 'l';  // LINK
+        strcat(entryname, " -> ");
+        getlink(mip, linkname);
+        strcat(entryname, linkname);
+    }
     else
         filetype = ' ';  // REG
 
@@ -36,7 +45,7 @@ int ls_file(int ino, char *filename)
         index++;
     }
 
-    printf(" %8d %s\n", mip->INODE.i_size, filename);
+    printf(" %8d %s\n", mip->INODE.i_size, entryname);
     iput(mip);
 
     return 0;

@@ -19,15 +19,16 @@ char *cmd_strs[] = {
     "link",
     "symlink",
     "readlink",
-    // "unlink",
-    // "chmod",
-    "touch"
-    // "stat",
-    // "cat ",
+    "unlink",
+    "chmod",
+    "touch",
+    "stat",
+    // "cat",
     // "cp",
     // "mv",
     // "mount",
-    // "umount"
+    // "umount",
+    "quit"
 };
 
 int (*cmds[])(char **) = {
@@ -41,15 +42,16 @@ int (*cmds[])(char **) = {
     my_link,
     my_symlink,
     my_readlink,
-    // unlink,
-    // chmod,
-    my_touch
-    // stat,
-    // cat ,
+    my_unlink,
+    my_chmod,
+    my_touch,
+    my_stat,
+    // cat,
     // cp,
     // mv,
     // mount,
-    // umount
+    // umount,
+    quit
 };
 
 int run_command(char *cmd, char *args)
