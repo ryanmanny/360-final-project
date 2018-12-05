@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <fcntl.h>
 #include <string.h>
 #include <ext2fs/ext2_fs.h>
@@ -97,5 +98,5 @@ int cd(char *args[]);
 int quit(char *args[]);
 int ls(char *args[]);
 int my_link(char *args[]);
-int make_dir(char *args[]);
-int creat_file(char* args[]);
+int my_mkdir(char *args[]);
+int creat(char* args[]);

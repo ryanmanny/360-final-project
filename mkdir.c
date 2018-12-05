@@ -3,73 +3,13 @@
 MINODE minode[NMINODE];
 MINODE *root;
 
-int  dev;
+int dev;
 
-int make_dir(char* args[])
-{
-    char* path = args[0];
-    char parent_path[128], filename[128];
-
-    int ino, pino;
-    MINODE *mip, *pip;
-
-    // path is pathname we wanna create
-    if (path[0] == '/')
-    {
-        // absolute path
-        mip = root;
-        dev = root->dev;
-    }
-    else
-    {
-        ///relative path
-        mip = running->cwd;
-        dev = running->cwd->dev;
-    }
-    
-    strcpy(parent_path, path);
-    strcpy(filename, path);
-    
-    strcpy(parent_path, dirname(parent_path));  // Will be "." if inserting in cwd
-    strcpy(filename, basename(filename));
-
-    pino = getino(parent_path);
-    pip = iget(dev, pino);
-
-    // checking if parent INODE is a dir 
-    if (S_ISDIR(pip->INODE.i_mode))
-    {
-        // check child does not exist in parent directory
-        ino = search(mip, filename);
-
-        if (ino > 0)
-        {
-            printf("Child %s already exists\n", filename);
-            return 1;
-        }
-    }
-
-    ino = newdir(pip);  // Allocates a new directory
-    pip->INODE.i_links_count++;
-
-    DIR dirent;
-
-    dirent.inode = ino;
-    strncpy(dirent.name, filename, strlen(filename));
-    dirent.name_len = strlen(filename);
-    dirent.rec_len = ideal_len(&dirent);
-
-    insert_entry(pip, &dirent);
-    
-    pip->INODE.i_atime = time(0L);
-    pip->dirty = 1;
-    iput(pip);
-
-    return 0;
-}
 
 int newdir(MINODE *pip)
 {
+    // Creates a new directory under pip and returns ino
+
     int ino = ialloc(pip->dev);
     int bno = balloc(pip->dev);
     char buf[BLKSIZE];
@@ -129,4 +69,68 @@ int newdir(MINODE *pip)
     iput(pip);
 
     return ino;
+}
+
+
+int my_mkdir(char* args[])
+{
+    char* path = args[0];
+    char parent_path[128], filename[128];
+
+    int ino, pino;
+    MINODE *mip, *pip;
+
+    // path is pathname we wanna create
+    if (path[0] == '/')
+    {
+        // absolute path
+        mip = root;
+        dev = root->dev;
+    }
+    else
+    {
+        ///relative path
+        mip = running->cwd;
+        dev = running->cwd->dev;
+    }
+    
+    strcpy(parent_path, path);
+    strcpy(filename, path);
+    
+    strcpy(parent_path, dirname(parent_path));  // Will be "." if inserting in cwd
+    strcpy(filename, basename(filename));
+
+    pino = getino(parent_path);
+    pip = iget(dev, pino);
+
+    // checking if parent INODE is a dir 
+    if (S_ISDIR(pip->INODE.i_mode))
+    {
+        // check child does not exist in parent directory
+        ino = search(&mip->INODE, filename);
+
+        if (ino > 0)
+        {
+            printf("Child %s already exists\n", filename);
+            return 1;
+        }
+    }
+
+    ino = newdir(pip);  // Allocates a new directory
+    pip->INODE.i_links_count++;
+
+    DIR dirent;
+
+    dirent.inode = ino;
+    strncpy(dirent.name, filename, strlen(filename));
+    dirent.name_len = strlen(filename);
+    dirent.rec_len = ideal_len(&dirent);
+
+    insert_entry(pip, &dirent);
+    
+    pip->INODE.i_atime = time(0L);
+    pip->dirty = 1;
+    iput(pip);
+
+    return 0;
 }

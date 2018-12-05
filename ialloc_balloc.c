@@ -81,7 +81,7 @@ int balloc(int dev)
   // read inode_bitmap block
   get_block(dev, bmap, buf);
 
-  for (i=0; i < ninodes; i++){
+  for (i=0; i < nblocks; i++){
     if (tst_bit(buf, i)==0){
        set_bit(buf,i);
        decFreeInodes(dev);

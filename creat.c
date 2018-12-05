@@ -5,9 +5,9 @@ MINODE *root;
 
 int  dev;
 
-int creat_file(char* args[])
+int creat(char* args[])
 {
-    char* path = args[0];
+    char *path = args[0];
     char parent_path[128], filename[128];
 
     int ino, pino;
@@ -32,7 +32,6 @@ int creat_file(char* args[])
     strcpy(parent_path, dirname(parent_path));  // Will be "." if inserting in cwd
     strcpy(filename, basename(filename));
 
-   
     pino = getino(parent_path);
     pip = iget(dev, pino);
 
@@ -49,8 +48,8 @@ int creat_file(char* args[])
         }
     }
 
-    //CONTINUE HERE , DONT INCREMENT LINK COUNT
     ino = newfile(pip);
+    
     DIR dirent;
     dirent.inode = ino;
     strncpy(dirent.name, filename, strlen(filename));
@@ -58,26 +57,28 @@ int creat_file(char* args[])
     dirent.rec_len = ideal_len(&dirent);
 
     insert_entry(pip, &dirent);
-        pip->INODE.i_atime = time(0L);
+    
+    pip->INODE.i_atime = time(0L);
     pip->dirty = 1;
+    
     iput(pip);
     return 0;
 }
 
-int newfile(MINODE* pip)
+int newfile(int dev)
 {
-    int ino = ialloc(pip->dev);
-    int bno = balloc(pip->dev);
+    int ino = ialloc(dev);
+    int bno = balloc(dev);
     char buf[BLKSIZE];
 
-    // Allocate the new Directory
-    MINODE* mip = iget(pip->dev, ino);
+    // Allocate the new File
+    MINODE* mip = iget(dev, ino);
     INODE * ip  = &mip->INODE;
 
     DIR* dp;
     char *cp;
 
-    ip->i_mode = (0x81A4);      // Directory with 0??? permissions
+    ip->i_mode = (0x81A4);      // File with 0??? permissions
     ip->i_uid  = running->uid;	// Owner uid 
     ip->i_gid  = running->gid;	// Group Id
     ip->i_size = 0;		// Size in bytes 
@@ -96,32 +97,7 @@ int newfile(MINODE* pip)
     }
     mip->dirty = 1;             // Set dirty for writeback
 
-    // Initializing the newly allocated block
-    // get_block(mip->dev, ip->i_block[0], buf);
-
-    // // dp = (DIR *) buf;
-    // // cp = buf;
-
-    // // // Create initial "." directory
-    // // strcpy(dp->name, ".");
-    // // dp->inode = ino;
-    // // dp->name_len = 1;
-    // // dp->rec_len = 12;
-    
-    // // cp += dp->rec_len;
-    // // dp = (DIR*) cp;
-
-    // // // Create initial ".." directory
-    // // strcpy(dp->name, "..");
-    // // dp->inode = pip->ino;
-    // // dp->name_len = 2;
-    // // dp->rec_len = 1012;  // Uses up the rest of the block
-
-    // // Write back initialized dir block
-    // put_block(mip->dev, ip->i_block[0], buf);
-    
     iput(mip);
-    iput(pip);
 
     return ino;
 }
