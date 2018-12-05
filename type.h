@@ -110,3 +110,6 @@ int my_rmdir(char *args[]);
 int my_creat(char* args[]);
 int my_readlink(char *args[]);
 int my_rmdir(char* args[]);
+
+int my_stat(char* args[]);
+
