@@ -87,7 +87,7 @@ INODE_LOCATION mailman(int ino);
 int getdir(INODE* ip, char *pathname);
 int insert_entry(MINODE *dir, DIR *file);
 int ideal_len(DIR *dirent);
-void readlink();
+int getlink(MINODE *mip, char buf[]);  // In symlink.c
 
 // ALLOC
 int ialloc(int dev);
