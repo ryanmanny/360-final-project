@@ -107,7 +107,7 @@ int my_mkdir(char* args[])
     if (S_ISDIR(pip->INODE.i_mode))
     {
         // check child does not exist in parent directory
-        ino = search(&mip->INODE, filename);
+        ino = search(&pip->INODE, filename);
 
         if (ino > 0)
         {
