@@ -6,6 +6,8 @@ PROC *running;
 // FUNCTIONS
 int my_link(char *args[])
 {
+    int dev;
+
     char filename[256];
     int src_ino, dest_ino;
     char *src = args[0];
@@ -16,11 +18,13 @@ int my_link(char *args[])
     if (dest[0] == '/')
     {
         wd = root;
+        dev = root->dev;
         dest++;
     }
     else
     {
         wd = running->cwd;
+        dev = running->cwd->dev;
     }
 
     // Get INO of destination folder
@@ -35,27 +39,28 @@ int my_link(char *args[])
         if (dest_ino == search(&wd->INODE, dest))
         {  // Dest is a dir, use the original filename
             strcpy(filename, src);
-            basename(filename);
         }
         else
         {  // Dest is a file, use the new filename
             strcpy(filename, dest);
-            basename(filename);
         }
+        strcpy(filename, basename(filename));
     }
 
     if (src[0] == '/')
     {
         wd = root;
+        dev = root->dev;
         src++;
     }
     else
     {
         wd = running->cwd;
+        dev = running->cwd->dev;
     }
 
     // Get INO of file to link
-    src_ino = search(&wd->INODE, src);
+    src_ino = getino(src);
 
     MINODE *to_link = iget(dev, src_ino);
     MINODE *dir = iget(dev, dest_ino);
