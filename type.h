@@ -100,6 +100,6 @@ int quit(char *args[]);
 int ls(char *args[]);
 int my_link(char *args[]);
 int my_mkdir(char *args[]);
-int creat(char* args[]);
+int my_creat(char* args[]);
 int my_symlink(char *args[]);
 int my_readlink(char *args[]);

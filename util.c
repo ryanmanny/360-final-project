@@ -151,8 +151,6 @@ int search(INODE *ip, char *name)
 int getino(MINODE *mip, char *pathname)
 {
     // Return ino of pathname
-    char buf[BLKSIZE];
-
     int ino;
     int n = tokenize(pathname, "/", tokens);
 
