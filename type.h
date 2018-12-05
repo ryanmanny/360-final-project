@@ -105,3 +105,4 @@ int my_creat(char* args[]);
 int my_symlink(char *args[]);
 int my_readlink(char *args[]);
 int my_rmdir(char* args[]);
+int my_touch(char* args[]);
