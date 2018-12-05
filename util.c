@@ -220,8 +220,15 @@ int getdir(INODE *ip, char *pathname)
 
 int insert_entry(MINODE *dir, DIR *file)
 {
-    int blk, required;
+    // Insert dirent for file into dir's datablocks
+
+    int blk, required, remain;
     char buf[BLKSIZE], *cp;
+
+    DIR *dp, *last_rec, *new_rec;
+
+    required = ideal_len(file);
+
     for (int i = 0; i < 12; i++)
     {
         blk = dir->INODE.i_block[i];
@@ -231,9 +238,8 @@ int insert_entry(MINODE *dir, DIR *file)
 
         get_block(dev, blk, buf);
   
-        dp = (DIR *)buf;
+        dp = (DIR *) buf;  // Begin traversing data blocks
         cp = buf;
-        required = ideal_len(dp);
         
         // Find last entry in dir
         while (cp + dp->rec_len < buf + BLKSIZE)
@@ -241,24 +247,29 @@ int insert_entry(MINODE *dir, DIR *file)
             cp += dp->rec_len;
             dp = (DIR *) cp;
         }
+        last_rec = dp;
 
-        int remain = dp->rec_len - required;
+        // How many bytes remain in current block
+        remain = last_rec->rec_len;
+
         if (remain >= required)
         {
-            dp->rec_len = required;
+            last_rec->rec_len = ideal_len(last_rec);
+            remain -= last_rec->rec_len;
             
-            cp += dp->rec_len;
-            dp = (DIR *)cp;
-            dp->inode = file->inode;
-            dp->name_len = file->name_len;
-            dp->rec_len = remain;
-            strncpy(dp->name, file->name, file->name_len);
+            cp += last_rec->rec_len;
+            new_rec = (DIR *) cp;
+            
+            new_rec->inode = file->inode;
+            new_rec->name_len = file->name_len;
+            new_rec->rec_len = remain;
+            strncpy(new_rec->name, file->name, file->name_len);
 
             put_block(fd, blk, buf);
         }
         else
         {
-            printf("Raise NotImplementedException we need to allocate another block");
+            printf("Raise!!! we need to allocate another block");
             return 1;
         }
         // else
@@ -273,7 +284,7 @@ int insert_entry(MINODE *dir, DIR *file)
         //     dp->name_len = file->name_len;
         //     strcpy(dp->name, file->name);
         //     put_block(fd, ip->i_block[i + 1], buf);
-        // }   
+        // }
     }
 
     return 0;
