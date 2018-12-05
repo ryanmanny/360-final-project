@@ -60,24 +60,32 @@ int my_link(char *args[])
     MINODE *dir = iget(wd->fs, dest_ino);
 
     // Add the link to the directory
-    DIR entry;
-    entry.inode = to_link->ino;
-    entry.name_len = strlen(filename);
-    strcpy(entry.name, filename);
-    entry.rec_len = ideal_len(&entry);
+    if (!S_ISDIR(to_link->INODE.i_mode))
+    {
+        DIR entry;
+        entry.inode = to_link->ino;
+        entry.name_len = strlen(filename);
+        strcpy(entry.name, filename);
+        entry.rec_len = ideal_len(&entry);
 
-    insert_entry(dir, &entry);
+        insert_entry(dir, &entry);
 
-    iput(to_link);
-    iput(dir);
+        iput(to_link);
+        iput(dir);
 
-    // Update the refCount in memory
-    INODE_LOCATION location = mailman(to_link->fs, to_link->ino);
+        // Update the refCount in memory
+        INODE_LOCATION location = mailman(to_link->fs, to_link->ino);
 
-    get_block(wd->fs->dev, location.block, buf);
-    INODE *link = (INODE *) buf + location.offset;
-    link->i_links_count++;
-    put_block(wd->fs->dev, location.block, buf);
-
-    return 0;
+        get_block(wd->fs->dev, location.block, buf);
+        INODE *link = (INODE *) buf + location.offset;
+        link->i_links_count++;
+        put_block(wd->fs->dev, location.block, buf);
+        
+        return 0;
+    }
+    else
+    {
+        printf("Can't create link to dir\n");
+        return 1;
+    }
 }

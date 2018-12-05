@@ -9,38 +9,13 @@ int ls_file(MINODE *mip, char *filename)
     char linkname[84];
     strcpy(entryname, filename);
 
-    char *mask  = "rwxrwxrwx";
-    char *bmask = "---------";
-    int index = 0;
-    u16 mode = mip->INODE.i_mode;
+    char filetype = print_mode(mip->INODE.i_mode);
 
-    char filetype;
-
-    if (S_ISDIR(mip->INODE.i_mode))
-        filetype = 'd';  // DIR
-    else if (S_ISLNK(mip->INODE.i_mode))
+    if (filetype == 'l')  // Links are printed with the arrow
     {
-        filetype = 'l';  // LINK
         strcat(entryname, " -> ");
         getlink(mip, linkname);
         strcat(entryname, linkname);
-    }
-    else
-        filetype = ' ';  // REG
-
-    printf("%c", filetype);
-
-    for (int shift = 8; shift >= 0; shift--)
-    {
-        if ((mode >> shift) & 1)
-        {
-            printf("%c", mask[index]);
-        }
-        else
-        {
-            printf("%c", bmask[index]);
-        }
-        index++;
     }
 
     printf(" %8d %s\n", mip->INODE.i_size, entryname);
@@ -94,10 +69,9 @@ int ls(char *args[])
             strncpy(temp, dp->name, dp->name_len);
             temp[dp->name_len] = '\0';
 
-            mip = iget(wd->fs, ino);
-            
             if (temp[0] != '.')  // Skip hidden files
             {
+                mip = iget(wd->fs, dp->inode);
                 ls_file(mip, temp);
             }
 

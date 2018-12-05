@@ -428,3 +428,36 @@ int truncate(MINODE *mip)
 
     return 0;
 }
+
+char print_mode(u16 mode)
+{
+    char *mask  = "rwxrwxrwx";
+    char *bmask = "---------";
+    int index = 0;
+
+    char filetype = '\0';
+
+    if (S_ISDIR(mode))
+        filetype = 'd';  // DIR
+    else if (S_ISLNK(mode))
+        filetype = 'l';  // LINK
+    else
+        filetype = ' ';  // REG
+
+    printf("%c", filetype);
+
+    for (int shift = 8; shift >= 0; shift--)
+    {
+        if ((mode >> shift) & 1)
+        {
+            printf("%c", mask[index]);
+        }
+        else
+        {
+            printf("%c", bmask[index]);
+        }
+        index++;
+    }
+
+    return filetype;
+}

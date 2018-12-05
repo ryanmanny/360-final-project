@@ -94,6 +94,7 @@ int delete_entry(MINODE *dir, char *name);
 int ideal_len(DIR *dirent);
 int getlink(MINODE *mip, char buf[]);  // In symlink.c
 int truncate(MINODE *mip);
+char print_mode(u16 mode);
 
 // ALLOC
 int ialloc(FS *fs);
