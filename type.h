@@ -86,14 +86,15 @@ int search(INODE *ip, char *name);
 INODE_LOCATION mailman(int ino);
 int getdir(INODE* ip, char *pathname);
 int insert_entry(MINODE *dir, DIR *file);
+int delete_entry(MINODE* dir, char *name);
 int ideal_len(DIR *dirent);
-void readlink();
 
 // ALLOC
 int ialloc(int dev);
 int balloc(int dev);
 void bdalloc(int dev, int bno);
 void idalloc(int dev, int ino);
+
 // COMMANDS
 int pwd(char *args[]);
 int cd(char *args[]);
