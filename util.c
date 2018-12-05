@@ -372,3 +372,58 @@ int ideal_len(DIR* dirent)
 {
     return 4 * ((8 + dirent->name_len + 3) / 4);
 }
+
+int truncate(MINODE *mip)
+{
+    // Deallocates all of the blocks used by inode
+
+    INODE *ip = &mip->INODE;
+
+    int n = BLKSIZE / sizeof(int);  // Number of bnos stored in each block
+    char sbuf[BLKSIZE], dbuf[BLKSIZE];
+    int *single_blocks, *double_blocks;
+
+    // puts("Direct blocks:");
+    for (int i = 0; i < 12; i++)
+    {
+        bdalloc(mip->dev, ip->i_block[i]);
+    }
+
+    // puts("Indirect blocks:");
+    if (ip->i_block[12] != 0)
+    {
+        get_block(mip->dev, ip->i_block[12], sbuf);
+        single_blocks = (int *) sbuf;
+        
+        for (int i = 0; i < n; i++)
+        {
+            if (single_blocks[i] != 0)
+            {
+                bdalloc(mip->dev, single_blocks[i]);
+            }
+        }
+    }
+
+    // puts("Double indirect blocks:");
+    if (ip->i_block[13] != 0)
+    {
+        get_block(mip->dev, ip->i_block[13], dbuf);
+        double_blocks = (int *) dbuf;
+
+        for (int i = 0; i < n; i++)
+        {
+            get_block(mip->dev, double_blocks[i], sbuf);
+            single_blocks = (int *) sbuf;
+
+            for (int j = 0; j < n; j++)
+            {
+                if (single_blocks[j] != 0)
+                {
+                    bdalloc(mip->dev, single_blocks[j]);
+                }
+            }
+        }
+    }
+
+    return 0;
+}

@@ -80,15 +80,7 @@ int my_rmdir(char* args[])
         }
     }
 
-    // Assume a dir won't ever use its indirect blocks
-    for (int i = 0; i < 12; i++)
-    {
-        if (mip->INODE.i_block[i] == 0)
-        {
-            continue;
-        }
-        bdalloc(mip->dev, mip->INODE.i_block[i]);
-    }
+    truncate(mip);
 
     idalloc(mip->dev, mip->ino);
     iput(mip);
