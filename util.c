@@ -121,7 +121,7 @@ int search(INODE *ip, char *name)
     {
         if(!ip->i_block[i])
         {
-            printf("No more blocks! %s not found!\n", name);
+            // printf("No more blocks! %s not found!\n", name);
             break;
         }
 
@@ -193,7 +193,7 @@ int getdir(INODE *ip, char *pathname)
     if (dest_ino < 0)
     {
         // Try the parent, maybe the file doesn't exist yet
-        dirname(parent_path);
+        strcpy(parent_path, dirname(parent_path));
         dest_ino = search(ip, parent_path);
     }
 
