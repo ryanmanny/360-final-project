@@ -88,10 +88,13 @@ int getdir(INODE* ip, char *pathname);
 int insert_entry(MINODE *dir, DIR *file);
 int ideal_len(DIR *dirent);
 int getlink(MINODE *mip, char buf[]);  // In symlink.c
+int truncate(MINODE *mip);
 
 // ALLOC
 int ialloc(int dev);
 int balloc(int dev);
+void idalloc(int dev, int ino);
+void bdalloc(int dev, int bno);
 
 // COMMANDS
 int pwd(char *args[]);
