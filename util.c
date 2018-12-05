@@ -288,6 +288,86 @@ int insert_entry(MINODE *dir, DIR *file)
     return 0;
 }
 
+int delete_entry(MINODE* dir, char* name)
+{
+    char buf[BLKSIZE];
+
+    DIR *dp, *prev = NULL;
+    char *cp;
+
+    DIR *delete = NULL, *before_delete = NULL, *last = NULL;
+
+    int affected_block = -1;
+    
+    for (int i = 0; i < 12; i++)
+    {
+        if (!dir->INODE.i_block[i])
+        {
+            printf("No more blocks! %s not found!\n", name);
+            return 1;
+        }
+
+        get_block(dir->dev, dir->INODE.i_block[i], buf);
+
+        cp = buf;
+        dp = (DIR *) buf;
+
+        while (cp < buf + BLKSIZE)
+        {
+            if (!strncmp(dp->name, name, dp->name_len))
+            {
+                // We found the dir we wanted
+                before_delete = prev;
+                delete = dp;
+                affected_block = i;  // This is the block that will be changed
+            }
+
+            prev = dp;
+            cp += dp->rec_len;       // Move to next block
+            dp = (DIR *) cp;
+        }
+        if (affected_block != -1)
+        {
+            last = prev;
+            break;
+        }
+    }
+
+    if (delete->rec_len == BLKSIZE)  // Only entry
+    {
+        bdalloc(dir->dev, dir->INODE.i_block[affected_block]);  // Boof the entire block
+        
+        dir->INODE.i_size -= BLKSIZE; // Decrement the block by the size of an entire block
+
+        for (int j = affected_block; j < 11; j++)  // Scoot the next blocks over to the left by one
+        {
+            dir->INODE.i_block[j] =  dir->INODE.i_block[j + 1];
+        }
+        dir->INODE.i_block[11] = 0;
+    }
+    else
+    {
+        if (delete == last)  // Last entry in the block
+        {
+            // Increase size of previous entry to overwrite current dirent
+            before_delete->rec_len += delete->rec_len;
+        }
+        else // This wasn't the last entry in the block
+        {
+            // Increase length of last entry by amount deleted
+            last->rec_len += delete->rec_len;
+
+            // Scoot the entire memoryspace over to squash the deleted entry
+            memcpy((char *) delete, (char *) delete + delete->rec_len, (int) (buf + BLKSIZE - (char *) delete));
+        }
+    }
+    
+    put_block(dir->dev, dir->INODE.i_block[affected_block], buf);
+    dir->dirty = 1;
+    
+    return 0;
+}
+
 int ideal_len(DIR* dirent)
 {
     return 4 * ((8 + dirent->name_len + 3) / 4);
