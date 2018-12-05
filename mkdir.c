@@ -1,21 +1,17 @@
 #include "type.h"
 
-MINODE minode[NMINODE];
-MINODE *root;
-
-int dev;
-
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 int newdir(MINODE *pip)
 {
     // Creates a new directory under pip and returns ino
 
-    int ino = ialloc(pip->dev);
-    int bno = balloc(pip->dev);
+    int ino = ialloc(pip->fs);
+    int bno = balloc(pip->fs);
     char buf[BLKSIZE];
 
     // Allocate the new Directory
-    MINODE* mip = iget(pip->dev, ino);
+    MINODE* mip = iget(pip->fs, ino);
     INODE * ip  = &mip->INODE;
 
     DIR* dp;
@@ -84,14 +80,12 @@ int my_mkdir(char* args[])
     if (path[0] == '/')
     {
         // absolute path
-        mip = root;
-        dev = root->dev;
+        mip = root_fs->root;
     }
     else
     {
-        ///relative path
+        // relative path
         mip = running->cwd;
-        dev = running->cwd->dev;
     }
     
     strcpy(parent_path, path);
@@ -101,13 +95,13 @@ int my_mkdir(char* args[])
     strcpy(filename, basename(filename));
 
     pino = getino(mip, parent_path);
-    pip = iget(dev, pino);
+    pip = iget(mip->fs, pino);
 
     // checking if parent INODE is a dir 
     if (S_ISDIR(pip->INODE.i_mode))
     {
         // check child does not exist in parent directory
-        ino = search(&pip->INODE, filename);
+        ino = search(pip, filename);
 
         if (ino > 0)
         {

@@ -1,9 +1,6 @@
 #include "type.h"
 
-MINODE minode[NMINODE];
-MINODE *root;
-
-int dev;
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 int my_rmdir(char* args[])
 {
@@ -15,13 +12,12 @@ int my_rmdir(char* args[])
 
     if (path[0] == '/')
     {
-        wd = root;
+        wd = root_fs->root;
         path++;
     }
     else
     {
         wd =running->cwd;
-        dev = running->cwd->dev;
     }
 
     strcpy(parent_path, path);
@@ -38,7 +34,7 @@ int my_rmdir(char* args[])
         return 1;
     }
 
-    mip = iget(wd->dev, ino);
+    mip = iget(wd->fs, ino);
 
     if (running->uid != mip->INODE.i_uid && running->uid != 0)
     {
@@ -63,7 +59,7 @@ int my_rmdir(char* args[])
         DIR* dp;
         char* cp;
 
-        get_block(dev, mip->INODE.i_block[0], buf);
+        get_block(wd->dev, mip->INODE.i_block[0], buf);
         
         cp = buf;
         dp = (DIR*) buf;
@@ -82,13 +78,13 @@ int my_rmdir(char* args[])
 
     truncate(mip);
 
-    idalloc(mip->dev, mip->ino);
+    idalloc(mip->fs, mip->ino);
     iput(mip);
 
     // This will succeed because the getino for the child succeeded
     pino = getino(wd, parent_path);
 
-    MINODE* pip = iget(wd->dev, pino);
+    MINODE* pip = iget(wd->fs, pino);
     delete_entry(pip, filename);
     pip->INODE.i_links_count--;  // We just lost ".." from the deleted child
     pip->INODE.i_mtime = time(0L);

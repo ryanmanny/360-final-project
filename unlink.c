@@ -1,5 +1,7 @@
 #include "type.h"
 
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
+
 int my_unlink(char *args[])
 {
     int ino, pino;
@@ -11,7 +13,7 @@ int my_unlink(char *args[])
 
     if (pathname[0] == '/')
     {
-        wd = root;
+        wd = root_fs->root;
         pathname++;
     }
     else
@@ -26,10 +28,10 @@ int my_unlink(char *args[])
     strcpy(filename, basename(filename));
 
     ino = getino(wd, pathname);
-    mip = iget(wd->dev, ino);
+    mip = iget(wd->fs, ino);
 
     pino = getino(wd, parent_path);
-    pip = iget(wd->dev, pino);
+    pip = iget(wd->fs, pino);
 
     if (S_ISDIR(mip->INODE.i_mode))
     {
@@ -49,7 +51,7 @@ int my_unlink(char *args[])
             {
                 // I don't think we need to do anything
             }
-            idalloc(mip->dev, mip->ino);
+            idalloc(mip->fs, mip->ino);
         }
 
         // Remove the dirent from the parent

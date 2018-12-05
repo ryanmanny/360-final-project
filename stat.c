@@ -1,8 +1,10 @@
 #include "type.h"
 
-int get_permissions(int ino, char *filename)
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
+
+int get_permissions(FS *fs, int ino, char *filename)
 {
-    MINODE *mip = iget(dev, ino);
+    MINODE *mip = iget(fs, ino);
 
     char *mask  = "rwxrwxrwx";
     char *bmask = "---------";
@@ -47,18 +49,16 @@ int my_stat(char* args[])
     if (path[0] == '/')
     {
         // absolute path
-        wd = root;
-        dev = root->dev;
+        wd = root_fs->root;
     }
     else
     {
         ///relative path
         wd =running->cwd;
-        dev = running->cwd->dev;
     }
 
     int ino = getino(wd, path);
-    mip = iget(wd->dev, ino);
+    mip = iget(wd->fs, ino);
 
     time_t a_time = (time_t )mip->INODE.i_atime;
     time_t c_time = (time_t )mip->INODE.i_ctime;
@@ -69,7 +69,7 @@ int my_stat(char* args[])
     printf("Device: %d    Inode: %d    Links: %d\n", wd->dev, ino, mip->INODE.i_links_count);
     printf("Access: (");
     printf("0%d/", S_ISDIR(myst.st_mode)? 755: 644);
-    get_permissions(ino, path);
+    get_permissions(wd->fs, ino, path);
     printf(")    Uid: %d    Gid: %d\n",  mip->INODE.i_uid, mip->INODE.i_gid);
     printf("Access: %s",ctime(&a_time));
     printf("Modify: %s",ctime(&m_time));

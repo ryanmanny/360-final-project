@@ -1,9 +1,7 @@
 #include "type.h"
 
 /********** globals *************/
-int fd;
-int imap, bmap;  // IMAP and BMAP block number
-int ninodes, nblocks, nfreeInodes, nfreeBlocks;
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 int tst_bit(char *buf, int bit)
 {
@@ -37,6 +35,9 @@ int decFreeInodes(int dev)
 {
     char buf[BLKSIZE];
 
+    SUPER *sp;
+    GD    *gp;
+
     // dec free inodes count in SUPER and GD
     get_block(dev, 1, buf);
     sp = (SUPER *)buf;
@@ -55,6 +56,9 @@ int incFreeInodes(int dev)
 {
     char buf[BLKSIZE];
 
+    SUPER *sp;
+    GD    *gp;
+
     // inc free inodes count in SUPER and GD
     get_block(dev, 1, buf);
     sp = (SUPER *) buf;
@@ -69,22 +73,22 @@ int incFreeInodes(int dev)
     return 0;
 }
 
-int ialloc(int dev)
+int ialloc(FS *fs)
 {
     int  i;
     char buf[BLKSIZE];
 
     // read inode_bitmap block
-    get_block(dev, imap, buf);
+    get_block(fs->dev, fs->imap, buf);
 
-    for (i=0; i < ninodes; i++)
+    for (i=0; i < fs->ninodes; i++)
     {
         if (!tst_bit(buf, i))  // Inode not already allocated
         {
             set_bit(buf,i);
-            decFreeInodes(dev);
+            decFreeInodes(fs->dev);
 
-            put_block(dev, imap, buf);
+            put_block(fs->dev, fs->imap, buf);
 
             return i+1;
         }
@@ -93,22 +97,22 @@ int ialloc(int dev)
     return 0;
 }
 
-int balloc(int dev)
+int balloc(FS *fs)
 {
     int  i;
     char buf[BLKSIZE];
 
     // read inode_bitmap block
-    get_block(dev, bmap, buf);
+    get_block(fs->dev, fs->bmap, buf);
 
-    for (i=0; i < nblocks; i++)
+    for (i=0; i < fs->nblocks; i++)
     {
         if (!tst_bit(buf, i))  // Block not already allocated
         {
             set_bit(buf,i);
-            decFreeInodes(dev);
+            decFreeInodes(fs->dev);
 
-            put_block(dev,  bmap, buf);
+            put_block(fs->dev,  fs->bmap, buf);
 
             return i+1;
         }
@@ -117,30 +121,30 @@ int balloc(int dev)
     return 0;
 }
 
-void idalloc(int dev, int ino)
+void idalloc(FS *fs, int ino)
 {
     char buf[BLKSIZE];
-    if (ino > ninodes)
+    if (ino > fs->ninodes)
     {
         printf("Error: ino %d out of range\n", ino);
         return;
     }
-    get_block(dev, imap, buf);
+    get_block(fs->dev, fs->imap, buf);
     clr_bit(buf, ino-1);
-    put_block(dev, imap, buf);
-    incFreeInodes(dev);
+    put_block(fs->dev, fs->imap, buf);
+    incFreeInodes(fs->dev);
 }
 
-void bdalloc(int dev, int bno)
+void bdalloc(FS *fs, int bno)
 {
     char buf[BLKSIZE];
-    if(bno > nblocks)
+    if(bno > fs->nblocks)
     {
         printf("Error: ino %d out of range\n", bno);
         return;
     }
-    get_block(dev, bmap, buf);
+    get_block(fs->dev, fs->bmap, buf);
     clr_bit(buf, bno-1);
-    put_block(dev, bmap, buf);
-    incFreeInodes(dev);
+    put_block(fs->dev, fs->bmap, buf);
+    incFreeInodes(fs->dev);
 }

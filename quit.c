@@ -1,14 +1,18 @@
 #include "type.h"
 
-MINODE minode[NMINODE];
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 int quit(char *args[])
 {
-    for (int i = 0; i < NMINODE; i++)
+    for (int n = 0; n < NMOUNT; n++)
     {
-        if (minode[i].refCount > 0 && minode[i].dirty)
+        FS *fs = &filesystems[n];
+        for (int i = 0; i < NMINODE; i++)
         {
-            iput(&minode[i]);
+            if (fs->minode[i].refCount > 0 && fs->minode[i].dirty)
+            {
+                iput(&fs->minode[i]);
+            }
         }
     }
     exit(0);

@@ -1,5 +1,7 @@
 #include "type.h"
 
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
+
 int my_touch(char* args[])
 {
     char* path = args[0];
@@ -10,29 +12,29 @@ int my_touch(char* args[])
     if (path[0] == '/')
     {
         // absolute path
-        wd = root;
-        dev = root->dev;
+        wd = root_fs->root;
         path++;
     }
     else
     {
         ///relative path
         wd =running->cwd;
-        dev = running->cwd->dev;
     }
 
     int ino = getino(wd, path);
 
-
-   if(ino == -1)
-   {
-       ///create file
+    if (ino == -1)
+    {
+        ///create file
         my_creat(args);
-   }
-   else{
-       mip = iget(wd->dev, ino);
+    }
+    else
+    {
+        mip = iget(wd->fs, ino);
 
-       mip->INODE.i_mtime = time(0L);
-       mip->INODE.i_atime = mip->INODE.i_mtime;
-   }
+        mip->INODE.i_mtime = time(0L);
+        mip->INODE.i_atime = mip->INODE.i_mtime;
+    }
+
+    return 0;
 }

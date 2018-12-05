@@ -2,8 +2,7 @@
 #include "type.h"
 
 char *tokens[64];
-int dev;
-int inode_start;
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 // FUNCTIONS
 int get_block(int fd, int blk, char buf[ ])
@@ -24,6 +23,7 @@ int put_block(int fd, int blk, char buf[ ])
 
 int tokenize(char *str, char *delim, char *tokens[])
 {
+    // Tokenize str into tokens array, assume it's large enough
     int count = 0;
 
     char *temp = strtok(str, delim);  // first call to strtok()
@@ -40,23 +40,25 @@ int tokenize(char *str, char *delim, char *tokens[])
     return count;
 }
 
-MINODE *iget(int dev, int ino)
+MINODE *iget(FS *fs, int ino)
 {
-    MINODE * mip;
+    // Get a MINODE * matching ino from a filesystem
+    MINODE *mip;
+    INODE *ip;
+
     char buf[BLKSIZE];
-    int i;
     INODE_LOCATION location;
 
-    /*(1). Search minode[ ] for an existing entry (refCount > 0) with
+    /*(1). Search minode[] for an existing entry (refCount > 0) with
        the needed (dev, ino):
        if found: inc its refCount by 1;
             return pointer to this minode;*/
-    for (i = 0; i < NMINODE; i++)
+    for (int i = 0; i < NMINODE; i++)
     {
-        if(minode[i].dev == dev && minode[i].ino == ino)
+        if (fs->minode[i].dev == fs->dev && fs->minode[i].ino == ino)
         {
-            minode[i].refCount++;
-            return &minode[i];
+            fs->minode[i].refCount++;
+            return &fs->minode[i];
         }
     }
 
@@ -64,29 +66,30 @@ MINODE *iget(int dev, int ino)
        find a FREE minode (refCount = 0); Let mip-> to this minode;
        set its refCount = 1;
        set its dev, ino*/
-    for (i = 0; i < NMINODE; i++)
+    for (int i = 0; i < NMINODE; i++)
     {
-        if(minode[i].refCount == 0)
+        if (fs->minode[i].refCount == 0)
         {
-            minode[i].refCount = 1;
-            mip = &minode[i];
-            mip->dev = dev;
+            fs->minode[i].refCount = 1;
+            mip = &fs->minode[i];
+            mip->dev = fs->dev;
             mip->ino = ino;
+            mip->fs = fs;
             break;
         }
     }
 
     //*(3). load INODE of (dev, ino) into mip->INODE:
-    location = mailman(ino);
+    location = mailman(fs, ino);
 
-    get_block(dev, location.block, buf);
+    get_block(fs->dev, location.block, buf);
     ip = (INODE *) buf + location.offset;
     mip->INODE = *ip;  // copy INODE to mp->INODE
 
     return mip;
 }
 
-int iput(MINODE *mip) // dispose a used minode by mip
+int iput(MINODE *mip)
 {
     char buf[BLKSIZE];
     INODE_LOCATION location;
@@ -96,19 +99,19 @@ int iput(MINODE *mip) // dispose a used minode by mip
     if (mip->refCount > 0) return 0;
     if (!mip->dirty)       return 0;
 
-    location = mailman(mip->ino);
+    location = mailman(mip->fs, mip->ino);
 
-    get_block(dev, location.block, buf);
+    get_block(mip->dev, location.block, buf);
     
     INODE *ip = (INODE*) buf + location.offset;
     memcpy(ip, &mip->INODE, sizeof(INODE));
 
-    put_block(dev, location.block, buf);
+    put_block(mip->dev, location.block, buf);
 
     return 0;
 }
 
-int search(INODE *ip, char *name)
+int search(MINODE *mip, char *name)
 {
     // Returns ino of name if it exists in ip
     char buf[BLKSIZE];
@@ -117,24 +120,24 @@ int search(INODE *ip, char *name)
     char* cp;
     DIR * dp;
 
-    for(int i = 0; i < 12; i++)
+    for (int i = 0; i < 12; i++)
     {
-        if(!ip->i_block[i])
+        if (!mip->INODE.i_block[i])
         {
             // printf("No more blocks! %s not found!\n", name);
             break;
         }
 
-        get_block(dev, ip->i_block[i], buf);
+        get_block(mip->dev, mip->INODE.i_block[i], buf);
         dp = (DIR *) buf;
         cp = buf;
 
-        while(cp < buf + BLKSIZE)
+        while (cp < buf + BLKSIZE)
         {
             strncpy(dirname, dp->name, dp->name_len);
             dirname[dp->name_len] = '\0';
 
-            if(!strcmp(dirname, name))
+            if (!strcmp(dirname, name))
             {
                 return dp->inode;
             }
@@ -154,31 +157,29 @@ int getino(MINODE *mip, char *pathname)
     int ino;
     int n = tokenize(pathname, "/", tokens);
 
-    INODE* ip = &mip->INODE;
-
     for (int i = 0; i < n; i++)
     {
-        ino = search(ip, tokens[i]);
+        ino = search(mip, tokens[i]);
         if (!ino)
         {
             // printf("can't find %s\n", tokens[i]);
             ino = -1;
             break;
         }
-        ip = &iget(mip->dev, ino)->INODE;
+        mip = iget(mip->fs, ino);
     }
     return ino;
-}
+};
 
-INODE_LOCATION mailman(int ino)
+INODE_LOCATION mailman(FS *fs, int ino)
 {
     INODE_LOCATION location;
-    location.block  = (ino - 1) / 8 + inode_start;
+    location.block  = (ino - 1) / 8 + fs->inode_start;
     location.offset = (ino - 1) % 8;
     return location;
 }
 
-int getdir(INODE *ip, char *pathname)
+int getdir(MINODE *mip, char *pathname)
 {
     // Tries to get a valid directory from pathname
     char parent_path[256];
@@ -186,13 +187,13 @@ int getdir(INODE *ip, char *pathname)
 
     strcpy(parent_path, pathname);
 
-    dest_ino = search(ip, pathname);
+    dest_ino = search(mip, pathname);
 
     if (dest_ino < 0)
     {
         // Try the parent, maybe the file doesn't exist yet
         strcpy(parent_path, dirname(parent_path));
-        dest_ino = search(ip, parent_path);
+        dest_ino = search(mip, parent_path);
     }
 
     if (dest_ino < 0)
@@ -203,7 +204,7 @@ int getdir(INODE *ip, char *pathname)
     else
     {
         // File exists: Check if it's a file or a dir
-        MINODE *mip = iget(dev, dest_ino);
+        mip = iget(mip->fs, dest_ino);
         if (!S_ISDIR(mip->INODE.i_mode))
         {
             printf("%s already exists\n", parent_path);
@@ -234,7 +235,7 @@ int insert_entry(MINODE *dir, DIR *file)
         if (!dir->INODE.i_block[i])
             break;
 
-        get_block(dev, blk, buf);
+        get_block(dir->dev, blk, buf);
   
         dp = (DIR *) buf;  // Begin traversing data blocks
         cp = buf;
@@ -263,7 +264,7 @@ int insert_entry(MINODE *dir, DIR *file)
             new_rec->rec_len = remain;
             strncpy(new_rec->name, file->name, file->name_len);
 
-            put_block(fd, blk, buf);
+            put_block(dir->dev, blk, buf);
         }
         else
         {
@@ -335,7 +336,7 @@ int delete_entry(MINODE* dir, char* name)
 
     if (delete->rec_len == BLKSIZE)  // Only entry
     {
-        bdalloc(dir->dev, dir->INODE.i_block[affected_block]);  // Boof the entire block
+        bdalloc(dir->fs, dir->INODE.i_block[affected_block]);  // Boof the entire block
         
         dir->INODE.i_size -= BLKSIZE; // Decrement the block by the size of an entire block
 
@@ -386,7 +387,7 @@ int truncate(MINODE *mip)
     // puts("Direct blocks:");
     for (int i = 0; i < 12; i++)
     {
-        bdalloc(mip->dev, ip->i_block[i]);
+        bdalloc(mip->fs, ip->i_block[i]);
     }
 
     // puts("Indirect blocks:");
@@ -399,7 +400,7 @@ int truncate(MINODE *mip)
         {
             if (single_blocks[i] != 0)
             {
-                bdalloc(mip->dev, single_blocks[i]);
+                bdalloc(mip->fs, single_blocks[i]);
             }
         }
     }
@@ -419,7 +420,7 @@ int truncate(MINODE *mip)
             {
                 if (single_blocks[j] != 0)
                 {
-                    bdalloc(mip->dev, single_blocks[j]);
+                    bdalloc(mip->fs, single_blocks[j]);
                 }
             }
         }

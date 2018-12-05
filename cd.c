@@ -15,11 +15,11 @@ int cd(char* args[])
 
     if (dirname && dirname[0])
     {
-        ino = search(&mip->INODE, dirname);
+        ino = search(mip, dirname);
         
         if (ino > 0)
         {
-            mip = iget(dev, ino);
+            mip = iget(mip->fs, ino);
 
             if(S_ISDIR(mip->INODE.i_mode))
             {
