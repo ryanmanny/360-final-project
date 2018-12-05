@@ -8,7 +8,6 @@ int my_unlink(char *args[])
     char filename[128], parent_path[128];
 
     MINODE *wd, *mip, *pip;
-    INODE *ip;
 
     if (pathname[0] == '/')
     {
@@ -34,7 +33,7 @@ int my_unlink(char *args[])
 
     if (S_ISDIR(mip->INODE.i_mode))
     {
-        printf("Can't unlink: %s is a dir", pathname);
+        printf("Can't unlink: %s is a dir\n", pathname);
         return 1;
     }
     else
@@ -45,6 +44,10 @@ int my_unlink(char *args[])
             if (S_ISREG(mip->INODE.i_mode))
             {
                 truncate(mip);
+            }
+            else if (S_ISLNK(mip->INODE.i_mode))
+            {
+                // I don't think we need to do anything
             }
             idalloc(mip->dev, mip->ino);
         }
