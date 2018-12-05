@@ -42,6 +42,7 @@ int rm_child(MINODE* parent, char* name)
                 }
                 else if(dp->rec_len > ideal_len(dp))
                 {
+                    ///removing the last entry
                     prev->rec_len += dp->rec_len;
                 }
                 else
