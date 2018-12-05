@@ -19,9 +19,9 @@ Start with an empty disk for level-1
 - symlink ✓
 - readlink ✓
 - unlink ✓
-- chmod
+- chmod ✓
 - touch
-- stat
+- stat ✓
 
 ============================ LEVEL 2 =========================================
 
