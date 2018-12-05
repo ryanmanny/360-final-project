@@ -148,16 +148,13 @@ int search(INODE *ip, char *name)
     return -1;
 }
 
-int getino(char *pathname)
+int getino(MINODE *mip, char *pathname)
 {
     // Return ino of pathname
-    char buf[BLKSIZE];
-
     int ino;
     int n = tokenize(pathname, "/", tokens);
 
-    get_block(dev, inode_start, buf);
-    INODE* ip = (INODE*) buf + 1;
+    INODE* ip = &mip->INODE;
 
     for (int i = 0; i < n; i++)
     {
@@ -165,9 +162,10 @@ int getino(char *pathname)
         if (!ino)
         {
             // printf("can't find %s\n", tokens[i]);
+            ino = -1;
             break;
         }
-        ip = &iget(dev, ino)->INODE;
+        ip = &iget(mip->dev, ino)->INODE;
     }
     return ino;
 }

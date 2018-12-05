@@ -100,7 +100,7 @@ int my_mkdir(char* args[])
     strcpy(parent_path, dirname(parent_path));  // Will be "." if inserting in cwd
     strcpy(filename, basename(filename));
 
-    pino = getino(parent_path);
+    pino = getino(mip, parent_path);
     pip = iget(dev, pino);
 
     // checking if parent INODE is a dir 

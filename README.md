@@ -12,11 +12,12 @@ Start with an empty disk for level-1
 - ls ✓
 - pwd ✓
 - cd ✓
-- mkdir
+- mkdir ✓
 - rmdir 
-- creat
-- link
-- symlink
+- creat ✓
+- link ✓
+- symlink ✓
+- readlink ✓
 - unlink
 - chmod
 - touch

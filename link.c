@@ -60,7 +60,7 @@ int my_link(char *args[])
     }
 
     // Get INO of file to link
-    src_ino = getino(src);
+    src_ino = getino(wd, src);
 
     MINODE *to_link = iget(dev, src_ino);
     MINODE *dir = iget(dev, dest_ino);
