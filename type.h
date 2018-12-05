@@ -92,7 +92,8 @@ void readlink();
 // ALLOC
 int ialloc(int dev);
 int balloc(int dev);
-
+void bdalloc(int dev, int bno);
+void idalloc(int dev, int ino);
 // COMMANDS
 int pwd(char *args[]);
 int cd(char *args[]);
@@ -103,3 +104,4 @@ int my_mkdir(char *args[]);
 int my_creat(char* args[]);
 int my_symlink(char *args[]);
 int my_readlink(char *args[]);
+int my_rmdir(char* args[]);
