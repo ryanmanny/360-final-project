@@ -32,7 +32,7 @@ int creat(char* args[])
     strcpy(parent_path, dirname(parent_path));  // Will be "." if inserting in cwd
     strcpy(filename, basename(filename));
 
-    pino = getino(parent_path);
+    pino = getino(mip, parent_path);
     pip = iget(dev, pino);
 
     // checking if parent INODE is a dir 
@@ -82,7 +82,7 @@ int newfile(int dev)
     ip->i_uid  = running->uid;	// Owner uid 
     ip->i_gid  = running->gid;	// Group Id
     ip->i_size = 0;		// Size in bytes 
-    ip->i_links_count = 1;	    // Links count=2 because of . and ..
+    ip->i_links_count = 1;
     
     ip->i_mtime = time(0L);     // Set all three timestamps to current time
     ip->i_ctime = ip->i_mtime;

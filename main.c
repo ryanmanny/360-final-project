@@ -16,8 +16,9 @@ char *cmd_strs[] = {
     "mkdir",
     // "rmdir ",
     "creat",
-    "link"
-    // "symlink",
+    "link",
+    "symlink",
+    "readlink"
     // "unlink",
     // "chmod",
     // "touch",
@@ -37,8 +38,9 @@ int (*cmds[])(char **) = {
     my_mkdir,
     // rmdir ,
     creat,
-    my_link
-    // symlink,
+    my_link,
+    my_symlink,
+    my_readlink
     // unlink,
     // chmod,
     // touch,
