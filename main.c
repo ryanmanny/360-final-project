@@ -36,7 +36,7 @@ int (*cmds[])(char **) = {
     pwd,
     cd,
     my_mkdir,
-    // rmdir ,
+    my_rmdir,
     my_creat,
     my_link,
     my_symlink,
