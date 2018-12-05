@@ -86,6 +86,7 @@ int search(INODE *ip, char *name);
 INODE_LOCATION mailman(int ino);
 int getdir(INODE* ip, char *pathname);
 int insert_entry(MINODE *dir, DIR *file);
+int delete_entry(MINODE *dir, char *filename);
 int ideal_len(DIR *dirent);
 int getlink(MINODE *mip, char buf[]);  // In symlink.c
 int truncate(MINODE *mip);
@@ -102,7 +103,9 @@ int cd(char *args[]);
 int quit(char *args[]);
 int ls(char *args[]);
 int my_link(char *args[]);
+int my_unlink(char *args[]);
 int my_mkdir(char *args[]);
+int my_rmdir(char *args[]);
 int my_creat(char* args[]);
 int my_symlink(char *args[]);
 int my_readlink(char *args[]);

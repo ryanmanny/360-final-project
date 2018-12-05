@@ -3,9 +3,9 @@
 MINODE minode[NMINODE];
 MINODE *root;
 
-int  dev;
+int dev;
 
-int remove_dir(char* args[])
+int my_rmdir(char* args[])
 {
     char* path = args[0];
     char parent_path[128], filename[128], buf[BLKSIZE];
@@ -110,7 +110,7 @@ int remove_dir(char* args[])
         return 0;
     }
     MINODE* pip = iget(dev, ino);
-    rm_child(pip, filename);
+    delete_entry(pip, filename);
     pip->INODE.i_links_count--;
     pip->INODE.i_mtime = time(0L);
     pip->INODE.i_atime = pip->INODE.i_mtime;
@@ -120,74 +120,4 @@ int remove_dir(char* args[])
     return 1;
 
     /// CONNTINUE HERE
-}
-
-int rm_child(MINODE* parent, char* name)
-{
-    DIR* dp,* prev;
-    int curPos = 0; 
-    char* cp;
-    char dirname[EXT2_NAME_LEN];
-    char buf[BLKSIZE];
-
-    for(int i = 0; i < 12; i++)
-    {
-        if(!ip->i_block[i])
-        {
-            printf("No more blocks! %s not found!\n", name);
-            return -1;
-            break;
-        }
-        get_block(dev, parent->INODE.i_block[i], buf);
-        cp = buf;
-        dp = (DIR *) buf;
-
-        while(cp < buf + BLKSIZE)
-        {
-            if (strncmp(dp->name, name, dp->name_len) == 0)
-            {
-                if(cp + dp->rec_len == buf + BLKSIZE)// First and only entry 
-                {
-                    char buf2[BLKSIZE];
-                    put_block(parent->dev, parent->INODE.i_block, buf2);
-                    bdalloc(parent->dev, parent->INODE.i_block[i]); // Boof the entire block
-                    parent->INODE.i_size -= BLKSIZE; // Decrement the block by the entire size of a block
-                    for(int j = i; j < 11; j++)
-                    {
-                        parent->INODE.i_block[j] =  parent->INODE.i_block[j+1];
-                    }
-                    parent->INODE.i_block[11] = 0;
-                }
-                else if(dp->rec_len > ideal_len(dp))
-                {
-                    prev->rec_len += dp->rec_len;
-                }
-                else
-                {
-                    // Entry is somewhere in the midle
-                    int removedLength = dp->rec_len;
-                    char* temp =buf;
-                    DIR* lastDir = (DIR*) temp;
-                    /// get to last entry
-                    while (temp + lastDir->rec_len < buf + BLKSIZE)
-                    {
-                        temp += lastDir->rec_len;
-                        lastDir = (DIR *) temp;
-                    }
-
-                    lastDir->rec_len += removedLength;
-                    memcpy(dp, cp, BLKSIZE - curPos +1 - removedLength);
-                }
-                put_block(dev, parent->INODE.i_block[i], buf);
-                parent->dirty = 1;
-                return 1;
-            }
-            cp += dp->rec_len;//move to next entry
-            curPos += dp->rec_len;//update current position
-            prev = dp;//set prev
-            dp = (DIR *)cp;
-        }
-    }
-    return 0;
-
 }

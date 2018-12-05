@@ -24,6 +24,7 @@ int newsymlink(int dev, char *src)
     ip->i_uid  = running->uid;	// Owner uid 
     ip->i_gid  = running->gid;	// Group Id
     ip->i_size = strlen(src);   // Set size to length of name
+    ip->i_size = strlen(src);   // Size in bytes
     ip->i_links_count = 1;	    
     
     ip->i_mtime = time(0L);     // Set all three timestamps to current time

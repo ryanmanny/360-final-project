@@ -18,8 +18,8 @@ char *cmd_strs[] = {
     "creat",
     "link",
     "symlink",
-    "readlink"
-    // "unlink",
+    "readlink",
+    "unlink"
     // "chmod",
     // "touch",
     // "stat",
@@ -36,12 +36,12 @@ int (*cmds[])(char **) = {
     pwd,
     cd,
     my_mkdir,
-    // rmdir ,
+    my_rmdir,
     my_creat,
     my_link,
     my_symlink,
-    my_readlink
-    // unlink,
+    my_readlink,
+    my_unlink
     // chmod,
     // touch,
     // stat,
