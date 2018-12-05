@@ -14,7 +14,7 @@ char *cmd_strs[] = {
     "pwd",
     "cd",
     "mkdir",
-    // "rmdir ",
+    "rmdir",
     "creat",
     "link",
     "symlink",
