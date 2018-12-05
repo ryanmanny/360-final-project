@@ -32,9 +32,7 @@ int remove_dir(char* args[])
     strcpy(filename, basename(filename));
     printf("parent: %s, child: %s path:%s\n", parent_path, filename, path);
 
-    int curIno = running->cwd->ino;
-    MINODE* pip = iget(dev, curIno);
-    ino = search(&(pip->INODE), path);
+    ino = getino(root, path);
 
     if(ino == -1)
     {
@@ -46,7 +44,7 @@ int remove_dir(char* args[])
 
 
 
-    int pino = getino(parent_path);
+    int pino = getino(root, parent_path);
 
     if(running->uid != mip->INODE.i_uid && running->uid != 0)
     {
@@ -105,13 +103,13 @@ int remove_dir(char* args[])
     idalloc(mip->dev, mip->ino);
     iput(mip);
 
-    ino = getino(parent_path);
+    ino = getino(root, parent_path);
     if(ino == -1)
     {
         printf("not found!\n");
         return 0;
     }
-    pip = iget(dev, ino);
+    MINODE* pip = iget(dev, ino);
     rm_child(pip, filename);
     pip->INODE.i_links_count--;
     pip->INODE.i_mtime = time(0L);
@@ -143,7 +141,7 @@ int rm_child(MINODE* parent, char* name)
         get_block(dev, parent->INODE.i_block[i], buf);
         cp = buf;
         dp = (DIR *) buf;
-        prev = 0;
+
         while(cp < buf + BLKSIZE)
         {
             if (strncmp(dp->name, name, dp->name_len) == 0)
@@ -160,21 +158,26 @@ int rm_child(MINODE* parent, char* name)
                     }
                     parent->INODE.i_block[11] = 0;
                 }
-                // else
-                // {
-                //     // Entry is somewhere in the midle
-                //     int removedLength = dp->rec_len;
+                else if(dp->rec_len > ideal_len(dp))
+                {
+                    prev->rec_len += dp->rec_len;
+                }
+                else
+                {
+                    // Entry is somewhere in the midle
+                    int removedLength = dp->rec_len;
+                    char* temp =buf;
+                    DIR* lastDir = (DIR*) temp;
+                    /// get to last entry
+                    while (temp + lastDir->rec_len < buf + BLKSIZE)
+                    {
+                        temp += lastDir->rec_len;
+                        lastDir = (DIR *) temp;
+                    }
 
-                //     /// get to last entry
-                //     while (cp + dp->rec_len < buf + BLKSIZE)
-                //     {
-                //         cp += dp->rec_len;
-                //         dp = (DIR *) cp;
-                //     }
-
-                //     dp->rec_len += removedLength;
-                //     memcpy(dp, cp, dp->rec_len);
-                // }
+                    lastDir->rec_len += removedLength;
+                    memcpy(dp, cp, BLKSIZE - curPos +1 - removedLength);
+                }
                 put_block(dev, parent->INODE.i_block[i], buf);
                 parent->dirty = 1;
                 return 1;
@@ -185,6 +188,6 @@ int rm_child(MINODE* parent, char* name)
             dp = (DIR *)cp;
         }
     }
-
+    return 0;
 
 }
