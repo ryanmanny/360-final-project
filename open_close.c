@@ -60,7 +60,7 @@ int my_open(char* path, char* modeStr)
         }
         else
         {
-            printf("File doesn't exist\n");
+            printf("%s doesn't exist\n", path);
             return 0;
         }
     }
