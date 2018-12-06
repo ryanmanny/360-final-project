@@ -2,8 +2,14 @@
 
 FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
-int my_chmod(char *args[])
+int my_chmod(int argc, char* args[])
 {
+    if (argc < 2)
+    {
+        puts("Usage: file mode");
+        return 1;
+    }
+
     char *pathname = args[0];
     char *mode_str = args[1];
 

@@ -2,8 +2,14 @@
 
 FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
-int my_rmdir(char* args[])
+int my_rmdir(int argc, char* args[])
 {
+    if (argc < 1)
+    {
+        puts("Usage: dir");
+        return 1;
+    }
+
     char* path = args[0];
     char parent_path[128], filename[128];
 

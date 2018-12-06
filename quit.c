@@ -2,7 +2,7 @@
 
 FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
-int quit(char *args[])
+int quit(int argc, char *args[])
 {
     for (int n = 0; n < NMOUNT; n++)
     {

@@ -1,6 +1,6 @@
 #include "type.h"
 
-int my_menu(char* args[])
+int my_menu(int argc, char* args[])
 {
     printf("\n*********** COMMANDS *****************\n");
     printf("*ls pwd cd mkdir rmdir creat link    *\n");

@@ -35,8 +35,13 @@ int newfile(FS *fs)
     return ino;
 }
 
-int my_creat(char* args[])
+int my_creat(int argc, char* args[])
 {
+    if (argc < 1)
+    {
+        printf("Usage: path\n");
+    }
+
     char *path = args[0];
     char parent_path[128], filename[128];
 

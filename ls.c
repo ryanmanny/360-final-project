@@ -24,7 +24,7 @@ int ls_file(MINODE *mip, char *filename)
     return 0;
 }
 
-int ls(char *args[])
+int ls(int argc, char* args[])
 {
     char *dirname = args[0];
 
@@ -54,30 +54,38 @@ int ls(char *args[])
 
     pip = iget(wd->fs, ino);
     
-    // TODO: Search the indirect blocks too
-    for (int i = 0; i < 12; i++)
+
+    if (S_ISDIR(pip->INODE.i_mode))
     {
-        if (pip->INODE.i_block[i] == 0)
-            break;
-
-        get_block(wd->dev, pip->INODE.i_block[i], dbuf);
-        dp = (DIR *) dbuf;
-        cp = (char *) dbuf;
-
-        while (cp < dbuf + BLKSIZE)
+        // TODO: Search the indirect blocks too
+        for (int i = 0; i < 12; i++)
         {
-            strncpy(temp, dp->name, dp->name_len);
-            temp[dp->name_len] = '\0';
+            if (pip->INODE.i_block[i] == 0)
+                break;
 
-            if (temp[0] != '.')  // Skip hidden files
+            get_block(wd->dev, pip->INODE.i_block[i], dbuf);
+            dp = (DIR *) dbuf;
+            cp = (char *) dbuf;
+
+            while (cp < dbuf + BLKSIZE)
             {
-                mip = iget(wd->fs, dp->inode);
-                ls_file(mip, temp);
-            }
+                strncpy(temp, dp->name, dp->name_len);
+                temp[dp->name_len] = '\0';
 
-            cp += dp->rec_len;  // Move to next record
-            dp = (DIR *)cp;
+                if (temp[0] != '.')  // Skip hidden files
+                {
+                    mip = iget(wd->fs, dp->inode);
+                    ls_file(mip, temp);
+                }
+
+                cp += dp->rec_len;  // Move to next record
+                dp = (DIR *)cp;
+            }
         }
+    }
+    else
+    {
+        printf("%s is not a dir\n", dirname);
     }
 
     iput(pip);

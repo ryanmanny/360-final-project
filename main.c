@@ -30,7 +30,7 @@ char *cmd_strs[] = {
     "quit"
 };
 
-int (*cmds[])(char **) = {
+int (*cmds[])(int, char **) = {
     (int (*)()) 
     ls,
     pwd,
@@ -56,14 +56,15 @@ int (*cmds[])(char **) = {
 
 int run_command(char *cmd, char *args)
 {
+    int argc;
     int num_commands = sizeof(cmd_strs) / sizeof(char *);
 
     for (int i = 0; i < num_commands; i++)
     {
         if (!strcmp(cmd, cmd_strs[i]))
         {
-            tokenize(args, " ", cmd_args);
-            return cmds[i](cmd_args);
+            argc = tokenize(args, " ", cmd_args);
+            return cmds[i](argc, cmd_args);
         }
     }
     puts("Invalid command!");

@@ -68,8 +68,14 @@ int newdir(MINODE *pip)
 }
 
 
-int my_mkdir(char* args[])
+int my_mkdir(int argc, char* args[])
 {
+    if (argc < 1)
+    {
+        puts("Usage: dir");
+        return 1;
+    }
+
     char* path = args[0];
     char parent_path[128], filename[128];
 
@@ -108,6 +114,11 @@ int my_mkdir(char* args[])
             printf("Child %s already exists\n", filename);
             return 1;
         }
+    }
+    else
+    {
+        printf("%s is not a dir\n", parent_path);
+        return 1;
     }
 
     ino = newdir(pip);  // Allocates a new directory
