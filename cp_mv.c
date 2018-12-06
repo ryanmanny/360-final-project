@@ -8,7 +8,7 @@ int my_cp(int argv,char* args[])
     char* src = args[0];
     char* dest = args[1]; 
     int fd = my_open(src, "R");
-    int gd = mu_open(dest, "RW");
+    int gd = my_open(dest, "RW");
     
     int n = 0;
     char* buf[BLKSIZE];
@@ -44,10 +44,9 @@ int my_mv(int argv,char* args[])
     {
         printf("%s does not exist\n", src);
     }
-    MINODE* mip = iget(wd->fs, ino);
 
-    if(mip->dev == wd->dev)
-    {
-        
-    }
+
+    my_cp(2, args);
+
+    my_unlink(1, args);
 }
