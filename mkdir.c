@@ -115,6 +115,11 @@ int my_mkdir(int argc, char* args[])
             return 1;
         }
     }
+    else
+    {
+        printf("%s is not a dir\n", parent_path);
+        return 1;
+    }
 
     ino = newdir(pip);  // Allocates a new directory
     pip->INODE.i_links_count++;
