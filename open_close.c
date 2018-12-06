@@ -165,3 +165,21 @@ int lseek(int fd, int position)
 }
 
 int pfd()
+{
+    printf(" fd    mode    offset    INODE\n");
+    printf("----   ----     ----     ------\n");
+    for(int i = 0; i < 10; i++)
+    {
+        printf("%d    %s    %d    [%d, %d]\n", i, )
+    }
+}
+
+char* determineMode(int mode)
+{
+    switch(mode)
+    {
+        case 0:
+            return "READ";
+        
+    }
+}
