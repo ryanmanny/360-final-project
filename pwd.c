@@ -70,7 +70,7 @@ int rpwd(MINODE *wd)
     return 0;
 }
 
-int pwd(char *args[])
+int pwd(int argc, char* args[])
 {
     MINODE *wd = running->cwd;
 

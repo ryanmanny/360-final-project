@@ -68,8 +68,14 @@ int newdir(MINODE *pip)
 }
 
 
-int my_mkdir(char* args[])
+int my_mkdir(int argc, char* args[])
 {
+    if (argc < 1)
+    {
+        puts("Usage: dir");
+        return 1;
+    }
+
     char* path = args[0];
     char parent_path[128], filename[128];
 

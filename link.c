@@ -4,8 +4,14 @@ char buf[BLKSIZE];
 FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 // FUNCTIONS
-int my_link(char *args[])
+int my_link(int argc, char* args[])
 {
+    if (argc < 2)
+    {
+        puts("Usage: source link");
+        return 1;
+    }
+
     char filename[256];
     int src_ino, dest_ino;
     char *src = args[0];

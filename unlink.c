@@ -2,8 +2,14 @@
 
 FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
-int my_unlink(char *args[])
+int my_unlink(int argc, char* args[])
 {
+    if (argc < 1)
+    {
+        puts("Usage: file");
+        return 1;
+    }
+
     int ino, pino;
 
     char *pathname = args[0];

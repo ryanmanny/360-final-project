@@ -42,8 +42,14 @@ int newsymlink(FS *fs, char *src)
     return ino;
 }
 
-int my_symlink(char *args[])
+int my_symlink(int argc, char* args[])
 {
+    if (argc < 2)
+    {
+        puts("Usage: file symlink");
+        return 1;
+    }
+
     // Copies src pathname into the i_block of an INODE
     char *src = args[0];
     char *dest = args[1];
@@ -103,8 +109,14 @@ int my_symlink(char *args[])
     return 0;
 }
 
-int my_readlink(char *args[])
+int my_readlink(int argc, char* args[])
 {
+    if (argc < 1)
+    {
+        puts("Usage: symlink");
+        return 1;
+    }
+
     // Reads symlink to print destination
     char *pathname = args[0];
 

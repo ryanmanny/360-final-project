@@ -2,44 +2,14 @@
 
 FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
-int get_permissions(FS *fs, int ino, char *filename)
+int my_stat(int argc, char* args[])
 {
-    MINODE *mip = iget(fs, ino);
-
-    char *mask  = "rwxrwxrwx";
-    char *bmask = "---------";
-    int index = 0;
-    u16 mode = mip->INODE.i_mode;
-
-    char filetype;
-
-    if (S_ISDIR(mip->INODE.i_mode))
-        filetype = 'd';  // DIR
-    else if (S_ISLNK(mip->INODE.i_mode))
-        filetype = 'l';  // LINK
-    else
-        filetype = ' ';  // REG
-
-    printf("%c", filetype);
-
-    for (int shift = 8; shift >= 0; shift--)
+    if (argc < 1)
     {
-        if ((mode >> shift) & 1)
-        {
-            printf("%c", mask[index]);
-        }
-        else
-        {
-            printf("%c", bmask[index]);
-        }
-        index++;
+        puts("Usage: file");
+        return 1;
     }
-    printf(" ");
-    return 0;
-}
 
-int my_stat(char* args[])
-{
     struct stat myst;
     char* path = args[0];
 
@@ -69,7 +39,7 @@ int my_stat(char* args[])
     printf("Device: %d    Inode: %d    Links: %d\n", wd->dev, ino, mip->INODE.i_links_count);
     printf("Access: (");
     printf("0%d/", S_ISDIR(myst.st_mode)? 755: 644);
-    get_permissions(wd->fs, ino, path);
+    print_mode(mip->INODE.i_mode);
     printf(")    Uid: %d    Gid: %d\n",  mip->INODE.i_uid, mip->INODE.i_gid);
     printf("Access: %s",ctime(&a_time));
     printf("Modify: %s",ctime(&m_time));

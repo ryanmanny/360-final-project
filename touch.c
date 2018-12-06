@@ -2,8 +2,14 @@
 
 FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
-int my_touch(char* args[])
+int my_touch(int argc, char* args[])
 {
+    if (argc < 1)
+    {
+        puts("Usage: file");
+        return 1;
+    }
+
     char* path = args[0];
 
     MINODE * mip, *wd;
@@ -23,10 +29,10 @@ int my_touch(char* args[])
 
     int ino = getino(wd, path);
 
-    if (ino == -1)
+    if (ino < 0)
     {
         ///create file
-        my_creat(args);
+        my_creat(argc, args);
     }
     else
     {

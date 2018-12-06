@@ -24,7 +24,7 @@ int ls_file(MINODE *mip, char *filename)
     return 0;
 }
 
-int ls(char *args[])
+int ls(int argc, char* args[])
 {
     char *dirname = args[0];
 
