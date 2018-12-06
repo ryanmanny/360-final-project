@@ -9,7 +9,8 @@ int my_open(char* path, char* modeStr)
     if (path[0] == '/')
     {
         // absolute path
-         wd = root_fs->root;
+        wd = root_fs->root;
+        path++;
     }
     else
     {
@@ -145,7 +146,7 @@ int my_close(int fd)
     running->fd[fd] = 0;
 }
 
-int lseek(int fd, int position)
+int my_lseek(int fd, int position)
 {
     OFT* oftp = &running->fd[fd];
     int original = oftp->offset;
@@ -154,16 +155,6 @@ int lseek(int fd, int position)
         oftp->offset = position;
     }
     return original;
-}
-
-int pfd()
-{
-    printf(" fd    mode    offset    INODE\n");
-    printf("----   ----     ----     ------\n");
-    for(int i = 0; i < 10; i++)
-    {
-        printf("%d    %s    %d    [%d, %d]\n", i, determineMode(running->fd[i]->mode), running->fd[i]->offset, running->fd[i]->mptr->dev,running->fd[i]->mptr->ino);
-    }
 }
 
 char* determineMode(int mode)
@@ -181,3 +172,15 @@ char* determineMode(int mode)
     }
     return " ";
 }
+
+
+int pfd()
+{
+    printf(" fd    mode    offset    INODE\n");
+    printf("----   ----     ----     ------\n");
+    for(int i = 0; i < 10; i++)
+    {
+        printf("%d    %s    %d    [%d, %d]\n", i, determineMode(running->fd[i]->mode), running->fd[i]->offset, running->fd[i]->mptr->dev,running->fd[i]->mptr->ino);
+    }
+}
+

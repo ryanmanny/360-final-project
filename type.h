@@ -95,6 +95,11 @@ int ideal_len(DIR *dirent);
 int getlink(MINODE *mip, char buf[]);  // In symlink.c
 int truncate(MINODE *mip);
 char print_mode(u16 mode);
+int get_ith_block(MINODE *mip, int i);
+
+// FILE MANIPULATION
+int my_open(char* path, char* modeStr);
+int my_read(int fd, char buf[], int nbytes);
 
 // ALLOC
 int ialloc(FS *fs);
@@ -119,3 +124,6 @@ int my_stat(int argc, char *args[]);
 int my_touch(int argc, char *args[]);
 int my_chmod(int argc, char *args[]);
 int my_menu(int argc, char *args[]);
+
+// IO
+int my_cat(int argc, char *args[]);

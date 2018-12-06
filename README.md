@@ -20,7 +20,7 @@ Start with an empty disk for level-1
 - readlink ✓
 - unlink ✓
 - chmod ✓
-- touch
+- touch ✓
 - stat ✓
 
 ============================ LEVEL 2 =========================================
