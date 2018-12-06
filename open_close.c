@@ -2,15 +2,9 @@
 OFT oft[NOFT];
 FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
-int my_open(int argc, char* args[])
+int my_open(char* path, char* modeStr)
 {
-    if(argc < 2)
-    {
-        printf("usage: open pathname mode\n");
-        return 0;
-    }
-    char* path = args[0];
-    char* modeStr = args[1];
+
     MINODE* wd;
     if (path[0] == '/')
     {
