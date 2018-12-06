@@ -187,6 +187,7 @@ int oput(OFT *op)
 
     if (op->refCount == 0)
     { 
+        iput(op->mptr);
         op->offset = 0;
         op->mptr = NULL;
         op->mode = -1;

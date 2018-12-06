@@ -9,9 +9,9 @@ FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 int my_open(char* path, char* modeStr)
 {
-    int fd;
-
+    int fd, ino;
     MINODE* wd;
+    
     if (path[0] == '/')
     {
         // absolute path
@@ -48,7 +48,7 @@ int my_open(char* path, char* modeStr)
         return 0;
     }
 
-    int ino = getino(wd, path);
+    ino = getino(wd, path);
 
     if (ino < 0)
     {

@@ -10,52 +10,53 @@ int my_cp(int argv,char* args[])
 
     int fd = my_open(src, "R");
     int gd = my_open(dest, "RW");
-    
-    int n = 0;
-    char buf[BLKSIZE];
 
-    while((n = my_read(fd, buf, BLKSIZE)))
+    if (fd > 0 && fd > 0)
     {
-        my_write(gd, buf, n);
+        int n = 0;
+        char buf[BLKSIZE];
+
+        while((n = my_read(fd, buf, BLKSIZE)))
+        {
+            my_write(gd, buf, n);
+        }
+
+        my_close(fd);
+        my_close(gd);
+
+        return 0;
+    }
+    return 1;
+}
+
+int my_mv(int argv, char* args[])
+{
+    char* src = args[0];
+    // char* dest = args[1]; 
+
+    MINODE *wd;
+    if (src[0] == '/')
+    {
+        // absolute path
+        wd = root_fs->root;
+        src++;
+    }
+    else
+    {
+        ///relative path
+        wd =running->cwd;
+    }
+    
+    int ino = getino(wd, src);
+    if(ino == -1)
+    {
+        printf("%s does not exist\n", src);
     }
 
-    my_close(fd);
-    my_close(gd);
-
-    return 0;
+    if (my_cp(2, args) == 0)  // my_cp succeeded
+    {
+        my_unlink(1, &src);
+        return 0;
+    }
+    return 1;
 }
-
-int my_mv(int argv,char* args[])
-{
-
-}
-// {
-//     char* src = args[0];
-//     char* dest = args[1]; 
-//     // path is pathname we wanna create
-
-//     MINODE * mip, *wd;
-//     if (src[0] == '/')
-//     {
-//         // absolute path
-//         wd = root_fs->root;
-//         src++;
-//     }
-//     else
-//     {
-//         ///relative path
-//         wd =running->cwd;
-//     }
-    
-//     int ino = getino(wd, src);
-//     if(ino == -1)
-//     {
-//         printf("%s does not exist\n", src);
-//     }
-//     // MINODE* mip = iget(wd->fs, ino);
-
-//     if(mip->dev == wd->dev)
-//     {
-        
-//     }
-// }

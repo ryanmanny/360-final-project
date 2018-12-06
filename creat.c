@@ -47,6 +47,7 @@ int my_creat(int argc, char* args[])
 
     int ino, pino;
     MINODE *mip, *pip;
+    
     // path is pathname we wanna create
     if (path[0] == '/')
     {
