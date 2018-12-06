@@ -1,28 +1,20 @@
 #include "type.h"
 OFT oft[NOFT];
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
-int my_open(int argc, char* args[])
+int my_open(char* path, char* modeStr)
 {
-    if(argc < 2)
-    {
-        printf("usage: open pathname mode\n");
-        return 0;
-    }
-    char* path = args[0];
-    char* modeStr = args[1];
     MINODE* wd;
     if (path[0] == '/')
     {
         // absolute path
-        wd = root;
-        dev = root->dev;
-        path++;
+         wd = root_fs->root;
+         path++;
     }
     else
     {
         ///relative path
         wd =running->cwd;
-        dev = running->cwd->dev;
     }
 
     ///DETERMINE MODE WE ARE OPENING IN
@@ -54,11 +46,11 @@ int my_open(int argc, char* args[])
     if(ino == -1)
     {
         //file doesn't exist
-        my_creat(args);
+        my_creat(1, &path);
         ino = getino(wd, path);
     }
 
-    MINODE* mip = iget(dev, ino);
+    MINODE* mip = iget(wd->fs, ino);
     if(!S_ISREG(mip->INODE.i_mode))
     {
         printf("Not a regular file. Cannot be opened\n");
@@ -170,7 +162,7 @@ int pfd()
     printf("----   ----     ----     ------\n");
     for(int i = 0; i < 10; i++)
     {
-        printf("%d    %s    %d    [%d, %d]\n", i, )
+        printf("%d    %s    %d    [%d, %d]\n", i, determineMode(running->fd[i]->mode), running->fd[i]->offset, running->fd[i]->mptr->dev,running->fd[i]->mptr->ino);
     }
 }
 
@@ -180,6 +172,12 @@ char* determineMode(int mode)
     {
         case 0:
             return "READ";
-        
+        case 1:
+            return "WRITE";
+        case 2: 
+            return "READ WRITE";
+        case 3: 
+            return "APPEND";
     }
+    return " ";
 }
