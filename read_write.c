@@ -70,6 +70,7 @@ int my_write(int fd, char buf[], int nbytes)
     MINODE *mip  = file->mptr;
     
     file->refCount++;
+    mip->INODE.i_size = file->offset;
 
     int count        = 0;
 

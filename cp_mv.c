@@ -11,6 +11,22 @@ int my_cp(int argv,char* args[])
     int fd = my_open(src, "R");
     int gd = my_open(dest, "RW");
 
+    if (gd == -2)  // Directory, we need to append src filename to dest
+    {
+        char actual_dest[256];
+        char filename[128];
+
+        strcpy(actual_dest, dest);
+
+        strcpy(filename, src);
+        strcpy(filename, basename(filename));  // Gets filename
+
+        strcat(actual_dest, "/");
+        strcat(actual_dest, filename);
+
+        gd = my_open(actual_dest, "RW");
+    }
+
     if (fd > -1 && gd > -1)
     {
         int n = 0;

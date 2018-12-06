@@ -45,10 +45,12 @@ int my_open(char* path, char* modeStr)
     else
     {
         printf("%s is an invalid mode\n", modeStr);
-        return 0;
+        return -1;
     }
 
-    ino = getino(wd, path);
+    char path_cpy[256];
+    strcpy(path_cpy, path);
+    ino = getino(wd, path_cpy);
 
     if (ino < 0)
     {
@@ -61,15 +63,21 @@ int my_open(char* path, char* modeStr)
         else
         {
             printf("%s doesn't exist\n", path);
-            return 0;
+            return -1;
         }
     }
 
     mip = iget(wd->fs, ino);
 
-    if (!S_ISREG(mip->INODE.i_mode))
+    if (S_ISDIR(mip->INODE.i_mode))
+    {
+        printf("%s is a dir, cannot be opened\n", path);
+        return -2;  // Special DIR return value
+    }
+    else if (!S_ISREG(mip->INODE.i_mode))
     {
         printf("%s is not a file, cannot be opened\n", path);
+        return -1;
     }
     
     oget(mip, mode, &fd);
