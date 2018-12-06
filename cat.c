@@ -19,9 +19,11 @@ int my_cat(int argc, char* args[])
 
     while ((n  = my_read(fd, buf, BLKSIZE)))
     {
-        write(1, buf, BLKSIZE);
+        write(1, buf, n);
     }
     puts("");
+
+    my_close(fd);
 
     return 0;
 }
