@@ -75,6 +75,7 @@ typedef struct proc{
 /*************** GLOBALS *********************************/
 extern char *cmd_args[64], *tokens[64];  // Used by interpreter
 
+extern OFT    oft[NOFT];
 extern PROC   proc[NPROC], *running;
 extern FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
@@ -85,6 +86,8 @@ int put_block(int dev, int blk, char buf[]);
 int tokenize(char *pathname, char *delim, char **tokens);
 MINODE *iget(FS *fs, int ino);
 int iput(MINODE *mip);
+OFT *oget(MINODE *mip, int mode, int *fd);
+int oput(OFT *op);
 int getino(MINODE *mip, char *pathname);
 int search(MINODE *mip, char *name);
 INODE_LOCATION mailman(FS *fs, int ino);
@@ -95,6 +98,14 @@ int ideal_len(DIR *dirent);
 int getlink(MINODE *mip, char buf[]);  // In symlink.c
 int truncate(MINODE *mip);
 char print_mode(u16 mode);
+int get_ith_block(MINODE *mip, int i);
+
+// FILE MANIPULATION
+int my_read(int fd, char buf[], int nbytes);
+int my_write(int fd, char buf[], int nbytes);
+int my_open(char* path, char* modeStr);
+int my_close(int fd);
+int my_lseek(int fd, int position);
 
 // ALLOC
 int ialloc(FS *fs);
@@ -103,6 +114,8 @@ void idalloc(FS *fs, int ino);
 void bdalloc(FS *fs, int bno);
 
 // COMMANDS
+
+// LEVEL 1
 int pwd(int argc, char *args[]);
 int cd(int argc, char *args[]);
 int quit(int argc, char *args[]);
@@ -119,3 +132,6 @@ int my_stat(int argc, char *args[]);
 int my_touch(int argc, char *args[]);
 int my_chmod(int argc, char *args[]);
 int my_menu(int argc, char *args[]);
+
+// LEVEL 2
+int my_cat(int argc, char *args[]);
