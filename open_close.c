@@ -10,7 +10,7 @@ FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 int my_open(char* path, char* modeStr)
 {
     int fd, ino;
-    MINODE* wd;
+    MINODE* wd, *mip;
     
     if (path[0] == '/')
     {
@@ -44,7 +44,7 @@ int my_open(char* path, char* modeStr)
     }
     else
     {
-        printf("Invalid mode! Cannot open\n");
+        printf("%s is an invalid mode\n", modeStr);
         return 0;
     }
 
@@ -65,11 +65,11 @@ int my_open(char* path, char* modeStr)
         }
     }
 
-    MINODE* mip = iget(wd->fs, ino);
+    mip = iget(wd->fs, ino);
 
     if (!S_ISREG(mip->INODE.i_mode))
     {
-        printf("Not a regular file. Cannot be opened\n");
+        printf("%s is not a file, cannot be opened\n", path);
     }
     
     oget(mip, mode, &fd);
