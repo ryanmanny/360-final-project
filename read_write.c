@@ -94,7 +94,7 @@ int my_write(int fd, char buf[], int nbytes)
         cp = writebuf + start_byte;
         start_byte = 0;
 
-        memcpy(buf, cp, min);
+        memcpy(cp, buf, min);
 
         put_block(mip->dev, cur_block, writebuf);
 
@@ -113,6 +113,7 @@ int my_write(int fd, char buf[], int nbytes)
     }
 
     file->refCount--;
+    mip->INODE.i_size += count;
     mip->dirty = 1;                              // Mark mip dirty fucker       
 
     return count;

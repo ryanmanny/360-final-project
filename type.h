@@ -135,3 +135,5 @@ int my_menu(int argc, char *args[]);
 
 // LEVEL 2
 int my_cat(int argc, char *args[]);
+int my_cp(int argc, char *args[]);
+int my_mv(int argc, char *args[]);
