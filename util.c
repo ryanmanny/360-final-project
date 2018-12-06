@@ -111,6 +111,89 @@ int iput(MINODE *mip)
     return 0;
 }
 
+OFT *oget(MINODE *mip, int mode, int *fd)
+{
+    OFT *op;
+    for (int i = 0; i < NOFT; i++)
+    {
+        if (oft[i].refCount == 0)
+        {
+            op = &oft[i];
+            break;
+        }
+        
+        //  Check whether the file is ALREADY opened with INCOMPATIBLE mode:
+        //        If it's already opened for W, RW, APPEND : reject.
+        //        (that is, only multiple R are OK)
+
+        else if (oft[i].mptr == mip)
+        {
+            if (oft[i].mode != mode)
+            {
+                printf("File already opened in another mode\n");
+                return NULL;
+            }
+            else
+            {
+                op = &oft[i];
+                break;
+            }
+        }
+    }
+
+    for (int i = 0; i < NFD; i++)
+    {
+        if (running->fd[i] == NULL)
+        {
+            op->mptr = iget(mip->fs, mip->ino);
+            op->mode = mode;
+            op->refCount++;
+            op->offset = 0;
+
+            running->fd[i] = op;
+            *fd = i;
+            
+            return op;
+        }
+    }
+
+    switch (mode)
+    {
+        /// R and RW
+        case 0: 
+        case 2:
+            op->offset = 0;
+            break;
+        /// W
+        case 1: 
+            truncate(mip);
+            op->offset = 0;
+            break;
+        /// APPEND
+        case 3:
+            op->offset = mip->INODE.i_size;
+            break;
+        default: 
+            printf("Invalid mode\n");
+            return NULL;
+    }
+
+    return NULL;
+}
+
+int oput(OFT *op)
+{
+    op->refCount--;
+
+    if (op->refCount == 0)
+    { 
+        op->offset = 0;
+        op->mptr = NULL;
+        op->mode = -1;
+    }
+    return 0;
+}
+
 int search(MINODE *mip, char *name)
 {
     // Returns ino of name if it exists in ip
@@ -377,56 +460,16 @@ int ideal_len(DIR* dirent)
 int truncate(MINODE *mip)
 {
     // Deallocates all of the blocks used by inode
+    int block, i = 0;;
 
-    INODE *ip = &mip->INODE;
-
-    int n = BLKSIZE / sizeof(int);  // Number of bnos stored in each block
-    char sbuf[BLKSIZE], dbuf[BLKSIZE];
-    int *single_blocks, *double_blocks;
-
-    // puts("Direct blocks:");
-    for (int i = 0; i < 12; i++)
+    // While there are still blocks
+    while ((block = get_ith_block(mip, i) != 0))
     {
-        bdalloc(mip->fs, ip->i_block[i]);
+        bdalloc(mip->fs, block);
+        i++;
     }
 
-    // puts("Indirect blocks:");
-    if (ip->i_block[12] != 0)
-    {
-        get_block(mip->dev, ip->i_block[12], sbuf);
-        single_blocks = (int *) sbuf;
-        
-        for (int i = 0; i < n; i++)
-        {
-            if (single_blocks[i] != 0)
-            {
-                bdalloc(mip->fs, single_blocks[i]);
-            }
-        }
-    }
-
-    // puts("Double indirect blocks:");
-    if (ip->i_block[13] != 0)
-    {
-        get_block(mip->dev, ip->i_block[13], dbuf);
-        double_blocks = (int *) dbuf;
-
-        for (int i = 0; i < n; i++)
-        {
-            get_block(mip->dev, double_blocks[i], sbuf);
-            single_blocks = (int *) sbuf;
-
-            for (int j = 0; j < n; j++)
-            {
-                if (single_blocks[j] != 0)
-                {
-                    bdalloc(mip->fs, single_blocks[j]);
-                }
-            }
-        }
-    }
-
-    return 0;
+    return i;  // Return number of blocks deallocated
 }
 
 char print_mode(u16 mode)
@@ -460,4 +503,59 @@ char print_mode(u16 mode)
     }
 
     return filetype;
+}
+
+int get_ith_block(MINODE *mip, int i)
+{
+    char buf[BLKSIZE];
+    // Get corresponding block # for index i in order
+    INODE *ip = &mip->INODE;
+
+    int n = BLKSIZE / sizeof(int);  // Number of bnos stored in each block
+    
+    int num_blocks = 12;
+    int num_iblocks = n;
+    int num_diblocks = n * n;
+
+    if (i < 0)
+    {
+        puts("Invalid block number!");
+        return -1;
+    }
+    // DIRECT BLOCKS: 0 <= i < 11
+    else if (i < num_blocks)
+    {
+        return ip->i_block[i];
+    }
+    // INDIRECT BLOCK: 12
+    else if (i < num_blocks + num_iblocks)
+    {
+        if (ip->i_block[12] != 0)
+        {
+            get_block(mip->dev, ip->i_block[12], buf);
+            
+            return ((int *) buf)[i - num_blocks];
+        }
+    }
+    // DOUBLE INDIRECT BLOCK: 13
+    else if (i < num_blocks + num_iblocks + num_diblocks)
+    {
+        if (ip->i_block[13] != 0)
+        {
+            // Get double indirect block contents
+            get_block(mip->dev, ip->i_block[13], buf);
+
+            int block  = ((i - (num_blocks + num_iblocks)) / n);
+            int offset = ((i - (num_blocks + num_iblocks)) % n);
+            
+            // Get the corresponding 
+            if (((int *) buf)[block] != 0)
+            {
+                get_block(mip->dev, ((int *) buf)[block], buf);
+
+                return ((int *) buf)[offset];
+            }
+        }
+    }
+    return 0;
 }
