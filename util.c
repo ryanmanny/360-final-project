@@ -111,6 +111,89 @@ int iput(MINODE *mip)
     return 0;
 }
 
+OFT *oget(MINODE *mip, int mode, int *fd)
+{
+    OFT *op;
+    for (int i = 0; i < NOFT; i++)
+    {
+        if (oft[i].refCount == 0)
+        {
+            op = &oft[i];
+            break;
+        }
+        
+        //  Check whether the file is ALREADY opened with INCOMPATIBLE mode:
+        //        If it's already opened for W, RW, APPEND : reject.
+        //        (that is, only multiple R are OK)
+
+        else if (oft[i].mptr == mip)
+        {
+            if (oft[i].mode != mode)
+            {
+                printf("File already opened in another mode\n");
+                return NULL;
+            }
+            else
+            {
+                op = &oft[i];
+                break;
+            }
+        }
+    }
+
+    for (int i = 0; i < NFD; i++)
+    {
+        if (running->fd[i] == NULL)
+        {
+            op->mptr = iget(mip->fs, mip->ino);
+            op->mode = mode;
+            op->refCount++;
+            op->offset = 0;
+
+            running->fd[i] = op;
+            *fd = i;
+            
+            return op;
+        }
+    }
+
+    switch (mode)
+    {
+        /// R and RW
+        case 0: 
+        case 2:
+            op->offset = 0;
+            break;
+        /// W
+        case 1: 
+            truncate(mip);
+            op->offset = 0;
+            break;
+        /// APPEND
+        case 3:
+            op->offset = mip->INODE.i_size;
+            break;
+        default: 
+            printf("Invalid mode\n");
+            return NULL;
+    }
+
+    return NULL;
+}
+
+int oput(OFT *op)
+{
+    op->refCount--;
+
+    if (op->refCount == 0)
+    { 
+        op->offset = 0;
+        op->mptr = NULL;
+        op->mode = -1;
+    }
+    return 0;
+}
+
 int search(MINODE *mip, char *name)
 {
     // Returns ino of name if it exists in ip
