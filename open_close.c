@@ -1,6 +1,10 @@
 #include "type.h"
 OFT oft[NOFT];
 FS     filesystems[NMOUNT], *root_fs, *cur_fs;
+#define READ 0
+#define WRITE 1
+#define READWRITE 2
+#define APPEND 3
 
 int my_open(char* path, char* modeStr)
 {
@@ -22,19 +26,19 @@ int my_open(char* path, char* modeStr)
     int mode = 0;
     if(strcmp(modeStr, "R") == 0 || strcmp(modeStr, "0") == 0)
     {
-        mode = 0;
+        mode = READ;
     }
     else if(strcmp(modeStr, "W") == 0 || strcmp(modeStr, "1") == 0)
     {
-        mode = 1;
+        mode = WRITE;
     }
     else if(strcmp(modeStr, "RW") == 0 || strcmp(modeStr, "2") == 0)
     {
-        mode = 2;
+        mode = READWRITE;
     }
     else if(strcmp(modeStr, "APPEND") == 0 || strcmp(modeStr, "3") == 0)
     {
-        mode = 3;
+        mode = APPEND;
     }
     else
     {
@@ -47,7 +51,7 @@ int my_open(char* path, char* modeStr)
     if(ino == -1)
     {
         //file doesn't exist
-        my_creat(argc , args);
+        my_creat(1 , &path);
         ino = getino(wd, path);
     }
 
@@ -157,30 +161,12 @@ int my_lseek(int fd, int position)
     return original;
 }
 
-char* determineMode(int mode)
-{
-    switch(mode)
-    {
-        case 0:
-            return "READ";
-        case 1:
-            return "WRITE";
-        case 2: 
-            return "READ WRITE";
-        case 3: 
-            return "APPEND";
-    }
-    return " ";
-}
-
-
 int pfd()
 {
     printf(" fd    mode    offset    INODE\n");
     printf("----   ----     ----     ------\n");
     for(int i = 0; i < 10; i++)
     {
-        printf("%d    %s    %d    [%d, %d]\n", i, determineMode(running->fd[i]->mode), running->fd[i]->offset, running->fd[i]->mptr->dev,running->fd[i]->mptr->ino);
+        printf("%d    %s    %d    [%d, %d]\n", i, running->fd[i]->mode == 0? "READ" : running->fd[i]->mode == 1? "WRITE" : running->fd[i]->mode == 2? "READWRITE" : running->fd[i]->mode == 3? "APPEND": " ", running->fd[i]->offset, running->fd[i]->mptr->dev,running->fd[i]->mptr->ino);
     }
 }
-
