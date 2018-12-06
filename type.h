@@ -102,6 +102,7 @@ int get_ith_block(MINODE *mip, int i);
 
 // FILE MANIPULATION
 int my_read(int fd, char buf[], int nbytes);
+int my_write(int fd, char buf[], int nbytes);
 int my_open(char* path, char* modeStr);
 int my_close(int fd);
 int my_lseek(int fd, int position);
@@ -113,6 +114,8 @@ void idalloc(FS *fs, int ino);
 void bdalloc(FS *fs, int bno);
 
 // COMMANDS
+
+// LEVEL 1
 int pwd(int argc, char *args[]);
 int cd(int argc, char *args[]);
 int quit(int argc, char *args[]);
@@ -130,5 +133,5 @@ int my_touch(int argc, char *args[]);
 int my_chmod(int argc, char *args[]);
 int my_menu(int argc, char *args[]);
 
-// IO
+// LEVEL 2
 int my_cat(int argc, char *args[]);

@@ -60,7 +60,7 @@ int my_read(int fd, char buf[], int nbytes)
     return count;  // Return actual number of bytes read
 }
 
-int my_read(int fd, char buf[], int nbytes)
+int my_write(int fd, char buf[], int nbytes)
 {
     
 }
