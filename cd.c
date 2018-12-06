@@ -1,10 +1,6 @@
 #include "type.h"
 
-int dev;
-
-MINODE minode[NMINODE];
-MINODE *root;
-PROC   proc[NPROC], *running;
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 int cd(int argc, char* args[])
 {
@@ -15,7 +11,7 @@ int cd(int argc, char* args[])
 
     if (dirname && dirname[0])
     {
-        ino = search(mip, dirname);
+        ino = getino(mip, dirname);
         
         if (ino > 0)
         {
@@ -29,20 +25,20 @@ int cd(int argc, char* args[])
             }
             else
             {
-                printf("%s is not a directory", dirname);
+                printf("%s is not a directory\n", dirname);
                 return 2;
             }
         }
         else
         {
-            printf("%s does not exist", dirname);
+            printf("%s does not exist\n", dirname);
             return 1;
         }
     }
-    else
+    else  // Just cd into root
     {
         iput(running->cwd);
-        running->cwd = root;
+        running->cwd = root_fs->root;
         return 0;
     }
 }
