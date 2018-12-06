@@ -11,7 +11,7 @@ int my_cp(int argv,char* args[])
     int fd = my_open(src, "R");
     int gd = my_open(dest, "RW");
 
-    if (fd > 0 && fd > 0)
+    if (fd > -1 && gd > -1)
     {
         int n = 0;
         char buf[BLKSIZE];
