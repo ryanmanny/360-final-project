@@ -26,6 +26,12 @@ char *cmd_strs[] = {
     "mv",
     // "mount",
     // "umount",
+    "open",
+    "close",
+    "read",
+    "write",
+    "lseek",
+    "pfd",
     "menu",
     "quit"
 };
@@ -50,6 +56,12 @@ int (*cmds[])(int, char **) = {
     my_mv,
     // mount,
     // umount,
+    open_cmd,
+    close_cmd,
+    read_cmd,
+    write_cmd,
+    lseek_cmd,
+    pfd,
     my_menu,
     quit
 };
@@ -98,6 +110,7 @@ int init()
         o->offset = 0;
         o->refCount = 0;
     }
+
 
     return 0;
 }
@@ -169,6 +182,11 @@ int mount_root(FS *fs, char *fs_name)
 
     //Let running -> P0
     running = &proc[0];
+
+    // for(int i = 0; i <NFD; i++)
+    // {
+    //     running->fd[i] = 0;
+    // }
 
     return 0;
 }

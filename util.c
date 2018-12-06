@@ -148,7 +148,10 @@ OFT *oget(MINODE *mip, int mode, int *fd)
             op->mptr = iget(mip->fs, mip->ino);
             op->mode = mode;
             op->refCount++;
-            op->offset = 0;
+            if(mode == 3)
+                op->offset = mip->INODE.i_size;
+            else
+                op->offset = 0;
 
             running->fd[i] = op;
             *fd = i;

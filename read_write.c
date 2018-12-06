@@ -62,6 +62,21 @@ int my_read(int fd, char buf[], int nbytes)
     return count;  // Return actual number of bytes read
 }
 
+int read_cmd(int argc, char* args[])
+{
+    if(argc < 2)
+    {
+        printf("usage: read fd bits\n");
+        return 0;
+    }
+    int fd = atoi(args[0]);
+    int bits = atoi(args[1]);
+    char buf[BLKSIZE];
+    my_read(fd, buf,bits);
+    printf("%s\n", buf);
+    return 0;
+}
+
 int my_write(int fd, char buf[], int nbytes)
 {
     char writebuf[BLKSIZE], *cp;
@@ -118,4 +133,23 @@ int my_write(int fd, char buf[], int nbytes)
     mip->dirty = 1;                              // Mark mip dirty
 
     return count;
+}
+
+int write_cmd(int argc, char* args[])
+{
+    if(argc < 2)
+    {
+        printf("usage: write fd text\n");
+        return 0;
+    }
+    int fd = atoi(args[0]);
+    int n, i;
+    for(i = 1; i < argc; i++)
+    {
+        for(n = 0; args[i][n] != '\0'; n++)
+            my_write(fd, &args[i][n], 1);
+        my_write(fd, " ", 1);
+    }
+    
+    return 0;
 }
