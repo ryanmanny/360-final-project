@@ -30,72 +30,77 @@ typedef struct ext2_group_desc  GD;
 typedef struct ext2_inode       INODE;
 typedef struct ext2_dir_entry_2 DIR;
 
-SUPER *sp;
-GD    *gp;
-INODE *ip;
-DIR   *dp;   
-
-typedef struct minode{
-  INODE INODE;
-  int dev, ino;
-  int refCount;
-  int dirty;
-  int mounted;
-  struct mntable *mptr;
-}MINODE;
-
 typedef struct inode_location{
-  int block;
-  int offset;
+    int block;
+    int offset;
 }INODE_LOCATION;
 
+struct minode;
+struct fs;
+
+typedef struct minode{
+    INODE INODE;
+    int dev, ino;
+    int refCount;
+    int dirty;
+    int mounted;
+    struct fs *fs;
+}MINODE;
+
+typedef struct fs{
+    struct minode minode[NMINODE];  // MINODEs currently allocated in memory
+    struct minode *root;            // Root directory
+
+    int dev;                 // Dev where FS is located
+    int nblocks, ninodes;
+    int bmap, imap;
+    int inode_start;         // inode start block
+}FS;
+
 typedef struct oft{
-  int  mode;
-  int  refCount;
-  MINODE *mptr;
-  int  offset;
+    int  mode;
+    int  refCount;
+    MINODE *mptr;
+    int  offset;
 }OFT;
 
 typedef struct proc{
-  struct proc *next;
-  int          pid;
-  int          uid, gid;
-  MINODE      *cwd;
-  OFT         *fd[NFD];
+    struct proc *next;  // Link to next proc... linked list behavior
+    int          pid;
+    int          uid, gid;
+    MINODE      *cwd;
+    OFT         *fd[NFD];
 }PROC;
 
 /*************** GLOBALS *********************************/
-extern MINODE minode[NMINODE];
-extern MINODE *root;
+extern char *cmd_args[64], *tokens[64];  // Used by interpreter
+
 extern PROC   proc[NPROC], *running;
-extern char *tokens[64], *cmd_args[64];
-extern int n;
-extern int fd, dev;
-extern int nblocks, ninodes, bmap, imap, inode_start;
-extern char line[256], command[128], cmd_arg_str[128];
+extern FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 /*************** FUNCTIONS *********************************/
 // UTIL.C
-int get_block(int fd, int blk, char buf[ ]);
-int put_block(int fd, int blk, char buf[ ]);
+int get_block(int dev, int blk, char buf[]);
+int put_block(int dev, int blk, char buf[]);
 int tokenize(char *pathname, char *delim, char **tokens);
-MINODE *iget(int dev, int ino);
+MINODE *iget(FS *fs, int ino);
 int iput(MINODE *mip);
 int getino(MINODE *mip, char *pathname);
-int search(INODE *ip, char *name);
-INODE_LOCATION mailman(int ino);
-int getdir(INODE* ip, char *pathname);
+int search(MINODE *mip, char *name);
+INODE_LOCATION mailman(FS *fs, int ino);
+int getdir(MINODE* mip, char *pathname);
 int insert_entry(MINODE *dir, DIR *file);
 int delete_entry(MINODE *dir, char *name);
 int ideal_len(DIR *dirent);
 int getlink(MINODE *mip, char buf[]);  // In symlink.c
 int truncate(MINODE *mip);
+char print_mode(u16 mode);
 
 // ALLOC
-int ialloc(int dev);
-int balloc(int dev);
-void idalloc(int dev, int ino);
-void bdalloc(int dev, int bno);
+int ialloc(FS *fs);
+int balloc(FS *fs);
+void idalloc(FS *fs, int ino);
+void bdalloc(FS *fs, int bno);
 
 // COMMANDS
 int pwd(char *args[]);

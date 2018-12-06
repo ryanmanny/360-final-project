@@ -1,10 +1,6 @@
 #include "type.h"
 
-int dev;
-
-MINODE minode[NMINODE];
-MINODE *root;
-PROC   proc[NPROC], *running;
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 int my_chmod(char *args[])
 {
@@ -19,7 +15,7 @@ int my_chmod(char *args[])
 
     if (pathname[0] == '/')
     {
-        wd = root;
+        wd = root_fs->root;
         pathname++;
     }
     else
@@ -28,7 +24,7 @@ int my_chmod(char *args[])
     }
 
     ino = getino(wd, pathname);
-    mip = iget(wd->dev, ino);
+    mip = iget(wd->fs, ino);
 
     if (strlen(mode_str) == 3)
     {

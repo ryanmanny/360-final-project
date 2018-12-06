@@ -1,7 +1,6 @@
 #include "type.h"
 
-MINODE *root;
-PROC   proc[NPROC], *running;
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 // FUNCTIONS
 int rpwd(MINODE *wd)
@@ -14,13 +13,13 @@ int rpwd(MINODE *wd)
 
     MINODE* pip;  // Parent MINODE
 
-    if (wd == root)
+    if (wd == root_fs->root)
     {
         return 0;
     }
 
     // Get dir block of cwd
-    get_block(dev, wd->INODE.i_block[0], buf);
+    get_block(wd->dev, wd->INODE.i_block[0], buf);
     dp = (DIR *) buf;
     cp = buf;
 
@@ -44,8 +43,8 @@ int rpwd(MINODE *wd)
         dp = (DIR*) cp;
     }
 
-    pip = iget(dev, parent_ino);
-    get_block(dev, pip->INODE.i_block[0], buf);
+    pip = iget(wd->fs, parent_ino);
+    get_block(wd->dev, pip->INODE.i_block[0], buf);
     dp = (DIR *) buf;
     cp = buf;
 
@@ -75,7 +74,7 @@ int pwd(char *args[])
 {
     MINODE *wd = running->cwd;
 
-    if(wd == root)
+    if(wd == root_fs->root)
     {
         printf("/");
     }

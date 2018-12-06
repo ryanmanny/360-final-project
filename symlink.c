@@ -1,7 +1,6 @@
 #include "type.h"
 
-char buf[BLKSIZE];
-PROC *running;
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
 // FUNCTIONS
 int getlink(MINODE *mip, char buf[])
@@ -12,12 +11,12 @@ int getlink(MINODE *mip, char buf[])
     return 0;
 }
 
-int newsymlink(int dev, char *src)
+int newsymlink(FS *fs, char *src)
 {
-    int ino = ialloc(dev);
+    int ino = ialloc(fs);
 
     // Allocate the new File
-    MINODE* mip = iget(dev, ino);
+    MINODE* mip = iget(fs, ino);
     INODE * ip  = &mip->INODE;
 
     ip->i_mode = (0xA1A4);      // File with 0??? permissions
@@ -46,8 +45,6 @@ int newsymlink(int dev, char *src)
 int my_symlink(char *args[])
 {
     // Copies src pathname into the i_block of an INODE
-    int dev;
-
     char *src = args[0];
     char *dest = args[1];
 
@@ -59,14 +56,12 @@ int my_symlink(char *args[])
     if (dest[0] == '/')
     {
         // absolute path
-        mip = root;
-        dev = root->dev;
+        mip = root_fs->root;
     }
     else
     {
         ///relative path
         mip = running->cwd;
-        dev = running->cwd->dev;
     }
 
     strcpy(parent_path, dest);
@@ -76,13 +71,13 @@ int my_symlink(char *args[])
     strcpy(filename, basename(filename));
 
     pino = getino(mip, parent_path);
-    pip = iget(dev, pino);
+    pip = iget(mip->fs, pino);
 
     // checking if parent INODE is a dir 
     if (S_ISDIR(pip->INODE.i_mode))
     {
         // check child does not exist in parent directory
-        ino = search(&pip->INODE, filename);
+        ino = search(pip, filename);
 
         if (ino > 0)
         {
@@ -91,7 +86,7 @@ int my_symlink(char *args[])
         }
     }
 
-    ino = newsymlink(pip->dev, src);
+    ino = newsymlink(pip->fs, src);
     
     DIR dirent;
     dirent.inode = ino;
@@ -123,7 +118,7 @@ int my_readlink(char *args[])
     if (pathname[0] == '/')
     {
         // absolute path
-        wd = root;
+        wd = root_fs->root;
     }
     else
     {
@@ -138,13 +133,13 @@ int my_readlink(char *args[])
     strcpy(filename, basename(filename));
 
     pino = getino(wd, parent_path);
-    pip = iget(wd->dev, pino);
+    pip = iget(wd->fs, pino);
 
     // checking if parent INODE is a dir 
     if (S_ISDIR(pip->INODE.i_mode))
     {
         // check child does not exist in parent directory
-        ino = search(&pip->INODE, filename);
+        ino = search(pip, filename);
 
         if (ino < 0)
         {
@@ -153,7 +148,7 @@ int my_readlink(char *args[])
         }
     }
 
-    mip = iget(wd->dev, ino);
+    mip = iget(wd->fs, ino);
 
     getlink(mip, link);
 

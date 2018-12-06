@@ -1,17 +1,14 @@
 #include "type.h"
 
-MINODE minode[NMINODE];
-MINODE *root;
+FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 
-int  dev;
-
-int newfile(int dev)
+int newfile(FS *fs)
 {
-    int ino = ialloc(dev);
-    int bno = balloc(dev);
+    int ino = ialloc(fs);
+    int bno = balloc(fs);
 
     // Allocate the new File
-    MINODE* mip = iget(dev, ino);
+    MINODE* mip = iget(fs, ino);
     INODE * ip  = &mip->INODE;
 
     ip->i_mode = (0x81A4);      // File with 0??? permissions
@@ -49,14 +46,12 @@ int my_creat(char* args[])
     if (path[0] == '/')
     {
         // absolute path
-        mip = root;
-        dev = root->dev;
+        mip = root_fs->root;
     }
     else
     {
         ///relative path
         mip = running->cwd;
-        dev = running->cwd->dev;
     }
 
     strcpy(parent_path, path);
@@ -66,13 +61,13 @@ int my_creat(char* args[])
     strcpy(filename, basename(filename));
 
     pino = getino(mip, parent_path);
-    pip = iget(dev, pino);
+    pip = iget(mip->fs, pino);
 
     // checking if parent INODE is a dir 
     if (S_ISDIR(pip->INODE.i_mode))
     {
         // check child does not exist in parent directory
-        ino = search(&pip->INODE, filename);
+        ino = search(pip, filename);
 
         if (ino > 0)
         {
@@ -81,7 +76,7 @@ int my_creat(char* args[])
         }
     }
 
-    ino = newfile(pip->dev);
+    ino = newfile(pip->fs);
     
     DIR dirent;
     dirent.inode = ino;
