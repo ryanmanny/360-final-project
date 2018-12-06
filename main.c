@@ -21,7 +21,7 @@ char *cmd_strs[] = {
     "chmod",
     "touch",
     "stat",
-    // "cat",
+    "cat",
     // "cp",
     // "mv",
     // "mount",
@@ -45,7 +45,7 @@ int (*cmds[])(int, char **) = {
     my_chmod,
     my_touch,
     my_stat,
-    // cat,
+    my_cat,
     // cp,
     // mv,
     // mount,
@@ -75,7 +75,8 @@ int run_command(char *cmd, char *args)
 int init()
 {
     int i;
-    PROC   *p;
+    PROC *p;
+    OFT  *o;
 
     printf("init()\n");
 
@@ -88,6 +89,14 @@ int init()
         p->cwd = 0;
         p->next = 0;
         p->cwd = 0;
+    }
+    for (int i = 0; i < NOFT; i++)
+    {
+        o = &oft[i];
+        o->mode = -1;
+        o->mptr = NULL;
+        o->offset = 0;
+        o->refCount = 0;
     }
 
     return 0;
