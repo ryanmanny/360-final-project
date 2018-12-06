@@ -7,6 +7,8 @@ FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 #define READWRITE 2
 #define APPEND 3
 
+
+
 int my_open(char* path, char* modeStr)
 {
     int fd, ino;
@@ -93,6 +95,20 @@ int my_open(char* path, char* modeStr)
     return fd;
 }
 
+int open_cmd(int argc, char* args[])
+{
+    if(argc < 2)
+    {
+        printf("usage: open path mode\n");
+        return 0;
+    }
+    if(my_open(args[0], args[1])== -1)
+    {
+        printf("open failed\n");
+    }
+    return 0;
+}
+
 int my_close(int fd)
 {
     if (running->fd[fd] == NULL || fd < 0 || fd >= NFD)
@@ -115,6 +131,18 @@ int my_close(int fd)
     return 0;
 }
 
+int close_cmd(int argc, char* args[])
+{
+    if(argc < 1)
+    {
+        printf("usage: close fd\n");
+        return 0;
+    }
+    int fd = atoi(args[0]);
+    my_close(fd);
+    return 0;
+}
+
 int my_lseek(int fd, int position)
 {
     OFT* oftp = running->fd[fd];
@@ -126,13 +154,29 @@ int my_lseek(int fd, int position)
     return original;
 }
 
-int pfd()
+int lseek_cmd(int argc, char* args[])
+{
+    if(argc < 2)
+    {
+        printf("usage: lseek fd position\n");
+    }
+    int fd = atoi(args[0]);
+    int pos = atoi(args[1]);
+
+    my_lseek(fd, pos);
+    return 0;
+}
+
+int pfd(int argc, char* args[])
 {
     printf(" fd    mode    offset    INODE\n");
     printf("----   ----     ----     ------\n");
     for(int i = 0; i < 10; i++)
     {
-        printf("%d    %s    %d    [%d, %d]\n", i, running->fd[i]->mode == 0? "READ" : running->fd[i]->mode == 1? "WRITE" : running->fd[i]->mode == 2? "READWRITE" : running->fd[i]->mode == 3? "APPEND": " ", running->fd[i]->offset, running->fd[i]->mptr->dev,running->fd[i]->mptr->ino);
+        if(!running->fd[i])
+            printf("0       0         0          0\n");
+        else
+            printf("%d    %s    %d        [%d, %d]\n", i, running->fd[i]->mode == 0? "READ" : running->fd[i]->mode == 1? "WRITE" : running->fd[i]->mode == 2? "READWRITE" : running->fd[i]->mode == 3? "APPEND": " ", running->fd[i]->offset, running->fd[i]->mptr->dev,running->fd[i]->mptr->ino);
     }
 
     return 0;
