@@ -98,7 +98,7 @@ int ideal_len(DIR *dirent);
 int getlink(MINODE *mip, char buf[]);  // In symlink.c
 int truncate(MINODE *mip);
 char print_mode(u16 mode);
-int get_ith_block(MINODE *mip, int i);
+int get_ith_block(MINODE *mip, int i, int allocate);
 
 // FILE MANIPULATION
 int my_read(int fd, char buf[], int nbytes);

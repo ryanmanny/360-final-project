@@ -170,7 +170,7 @@ int mount_root(FS *fs, char *fs_name)
     gp = (GD *) buf;
 
     fs->imap = gp->bg_inode_bitmap;
-    fs->bmap = gp->bg_inode_bitmap;
+    fs->bmap = gp->bg_block_bitmap;  // TRASH!!!
     fs->inode_start = gp->bg_inode_table;
     
     fs->root = iget(fs, 2);    /* get root inode */
@@ -182,11 +182,6 @@ int mount_root(FS *fs, char *fs_name)
 
     //Let running -> P0
     running = &proc[0];
-
-    // for(int i = 0; i <NFD; i++)
-    // {
-    //     running->fd[i] = 0;
-    // }
 
     return 0;
 }

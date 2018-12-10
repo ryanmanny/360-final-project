@@ -9,8 +9,9 @@ int quit(int argc, char *args[])
         FS *fs = &filesystems[n];
         for (int i = 0; i < NMINODE; i++)
         {
-            if (fs->minode[i].refCount > 0 && fs->minode[i].dirty)
+            if (fs->minode[i].refCount > 0)
             {
+                fs->minode[i].refCount = 1;
                 iput(&fs->minode[i]);
             }
         }

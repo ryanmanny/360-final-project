@@ -34,7 +34,10 @@ int my_read(int fd, char buf[], int nbytes)
         if (remain_block < min)
             min = remain_block;
 
-        cur_block = get_ith_block(mip, i_block);
+        cur_block = get_ith_block(mip, i_block, 0);
+
+        printf("get_ith_block(mip, %d) returned %d\n", i_block, cur_block);
+
 
         get_block(mip->dev, cur_block, readbuf);
         cp = readbuf + start_byte;
@@ -55,6 +58,8 @@ int my_read(int fd, char buf[], int nbytes)
             i_block++;                           // Move to next block
             remain_block = BLKSIZE;
         }
+
+        printf("Read %d bytes from block %d\n", count, cur_block);
     }
 
     file->refCount--;
@@ -104,8 +109,10 @@ int my_write(int fd, char buf[], int nbytes)
         if (remain_block < min)
             min = remain_block;
 
-        cur_block = get_ith_block(mip, i_block);
+        cur_block = get_ith_block(mip, i_block, 1);
         get_block(mip->dev, cur_block, writebuf);
+
+        printf("get_ith_block(mip, %d) returned %d\n", i_block, cur_block);
 
         cp = writebuf + start_byte;
         start_byte = 0;
@@ -126,6 +133,8 @@ int my_write(int fd, char buf[], int nbytes)
             i_block++;                           // Move to next block
             remain_block = BLKSIZE;
         }
+
+        printf("Copied %d bytes into block %d\n", count, cur_block);
     }
 
     file->refCount--;

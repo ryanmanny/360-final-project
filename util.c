@@ -46,6 +46,12 @@ MINODE *iget(FS *fs, int ino)
     MINODE *mip;
     INODE *ip;
 
+    if (ino < 0)
+    {
+        printf("Getting invalid ino %d\n", ino);
+        return NULL;
+    }
+
     char buf[BLKSIZE];
     INODE_LOCATION location;
 
@@ -85,6 +91,12 @@ MINODE *iget(FS *fs, int ino)
     get_block(fs->dev, location.block, buf);
     ip = (INODE *) buf + location.offset;
     mip->INODE = *ip;  // copy INODE to mp->INODE
+
+    // printf("GETTING INO: %d\n", ino);
+    // for (int i = 0; i < 14; i++)
+    // {
+    //     printf("ip->iblock[%d]: %d\n", i, ip->i_block[i]);
+    // }
 
     return mip;
 }
@@ -247,7 +259,7 @@ int getino(MINODE *mip, char *pathname)
     for (int i = 0; i < n; i++)
     {
         ino = search(mip, tokens[i]);
-        if (!ino)
+        if (ino < 1)
         {
             // printf("can't find %s\n", tokens[i]);
             ino = -1;
@@ -464,10 +476,10 @@ int ideal_len(DIR* dirent)
 int truncate(MINODE *mip)
 {
     // Deallocates all of the blocks used by inode
-    int block, i = 0;;
+    int block, i = 0;
 
     // While there are still blocks
-    while ((block = get_ith_block(mip, i) != 0))
+    while ((block = get_ith_block(mip, i, 0) != 0))
     {
         bdalloc(mip->fs, block);
         i++;
@@ -509,9 +521,55 @@ char print_mode(u16 mode)
     return filetype;
 }
 
-int get_ith_block(MINODE *mip, int i)
+int initialize_block(FS *fs, int bno)
 {
     char buf[BLKSIZE];
+    int n = BLKSIZE / sizeof(int);
+
+    get_block(fs->dev, bno, buf);
+
+    for (int i = 0; i < n; i++)
+    {
+        // Set all direct blocks living within indirect block to zero
+        ((int *)buf)[i] = 0;
+    }
+
+    put_block(fs->dev, bno, buf);
+
+    return 0;
+}
+
+int get_from_block(FS *fs, int bno, int index, int allocate)
+{
+    // Allocate a bno within a block at index and return the allocated bno
+    char buf[BLKSIZE];
+
+    get_block(fs->dev, bno, buf);
+
+    int *pblock = &((int *) buf)[index];
+
+    if (*pblock == 0)
+    {
+        if (allocate)
+        {
+            *pblock = balloc(fs);
+            if (allocate == 2)  // Get an indirect block
+            {
+                initialize_block(fs, *pblock);
+            }
+            put_block(fs->dev, bno, buf);
+        }
+        else
+        {
+            return -1;
+        }
+    }
+    return *pblock;
+}
+
+int get_ith_block(MINODE *mip, int i, int allocate)
+{
+    // Allocate Truthy value means function will allocate the new block for MINODE if it doesn't exist
     // Get corresponding block # for index i in order
     INODE *ip = &mip->INODE;
 
@@ -529,37 +587,67 @@ int get_ith_block(MINODE *mip, int i)
     // DIRECT BLOCKS: 0 <= i < 11
     else if (i < num_blocks)
     {
+        if (ip->i_block[i] == 0)
+        {
+            if (allocate)
+            {
+                ip->i_block[i] = balloc(mip->fs);
+            }
+            else
+            {
+                return -1;
+            }
+        }
         return ip->i_block[i];
     }
     // INDIRECT BLOCK: 12
     else if (i < num_blocks + num_iblocks)
     {
-        if (ip->i_block[12] != 0)
+        if (ip->i_block[12] == 0)
         {
-            get_block(mip->dev, ip->i_block[12], buf);
-            
-            return ((int *) buf)[i - num_blocks];
+            if (allocate)
+            {
+                ip->i_block[12] = balloc(mip->fs);
+                initialize_block(mip->fs, ip->i_block[12]);
+            }
+            else
+            {
+                return -1;
+            }
         }
+        return get_from_block(mip->fs, ip->i_block[12], i - num_blocks, allocate);
     }
     // DOUBLE INDIRECT BLOCK: 13
     else if (i < num_blocks + num_iblocks + num_diblocks)
     {
-        if (ip->i_block[13] != 0)
+        if (ip->i_block[13] == 0)
         {
-            // Get double indirect block contents
-            get_block(mip->dev, ip->i_block[13], buf);
-
-            int block  = ((i - (num_blocks + num_iblocks)) / n);
-            int offset = ((i - (num_blocks + num_iblocks)) % n);
-            
-            // Get the corresponding 
-            if (((int *) buf)[block] != 0)
+            if (allocate)
             {
-                get_block(mip->dev, ((int *) buf)[block], buf);
-
-                return ((int *) buf)[offset];
+                ip->i_block[13] = balloc(mip->fs);
+                initialize_block(mip->fs, ip->i_block[13]);
+            }
+            else
+            {
+                return -1;
             }
         }
+        // Get double indirect block contents
+        int block_index  = ((i - (num_blocks + num_iblocks)) / n);
+        int offset       = ((i - (num_blocks + num_iblocks)) % n);
+
+        int indirect_block;
+
+        if (allocate)
+            indirect_block = get_from_block(mip->fs, ip->i_block[13], block_index, 2);
+        else
+            indirect_block = get_from_block(mip->fs, ip->i_block[13], block_index, 0);
+
+        if (indirect_block == -1)
+        {
+            return -1;
+        }
+        return get_from_block(mip->fs, indirect_block, offset, allocate);
     }
-    return 0;
+    return -1;
 }
