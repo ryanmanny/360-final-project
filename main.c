@@ -26,6 +26,12 @@ char *cmd_strs[] = {
     "mv",
     // "mount",
     // "umount",
+    "open",
+    "close",
+    "read",
+    "write",
+    "lseek",
+    "pfd",
     "menu",
     "quit"
 };
@@ -50,6 +56,12 @@ int (*cmds[])(int, char **) = {
     my_mv,
     // mount,
     // umount,
+    open_cmd,
+    close_cmd,
+    read_cmd,
+    write_cmd,
+    lseek_cmd,
+    pfd,
     my_menu,
     quit
 };
@@ -98,6 +110,7 @@ int init()
         o->offset = 0;
         o->refCount = 0;
     }
+
 
     return 0;
 }
@@ -157,7 +170,7 @@ int mount_root(FS *fs, char *fs_name)
     gp = (GD *) buf;
 
     fs->imap = gp->bg_inode_bitmap;
-    fs->bmap = gp->bg_inode_bitmap;
+    fs->bmap = gp->bg_block_bitmap;  // TRASH!!!
     fs->inode_start = gp->bg_inode_table;
     
     fs->root = iget(fs, 2);    /* get root inode */
