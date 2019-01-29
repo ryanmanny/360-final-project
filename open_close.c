@@ -7,11 +7,13 @@ FS     filesystems[NMOUNT], *root_fs, *cur_fs;
 #define READWRITE 2
 #define APPEND 3
 
+
+
 int my_open(char* path, char* modeStr)
 {
-    int fd;
-
-    MINODE* wd;
+    int fd, ino;
+    MINODE* wd, *mip;
+    
     if (path[0] == '/')
     {
         // absolute path
@@ -44,11 +46,13 @@ int my_open(char* path, char* modeStr)
     }
     else
     {
-        printf("Invalid mode! Cannot open\n");
-        return 0;
+        printf("%s is an invalid mode\n", modeStr);
+        return -1;
     }
 
-    int ino = getino(wd, path);
+    char path_cpy[256];
+    strcpy(path_cpy, path);
+    ino = getino(wd, path_cpy);
 
     if (ino < 0)
     {
@@ -60,16 +64,22 @@ int my_open(char* path, char* modeStr)
         }
         else
         {
-            printf("File doesn't exist\n");
-            return 0;
+            printf("%s doesn't exist\n", path);
+            return -1;
         }
     }
 
-    MINODE* mip = iget(wd->fs, ino);
+    mip = iget(wd->fs, ino);
 
-    if (!S_ISREG(mip->INODE.i_mode))
+    if (S_ISDIR(mip->INODE.i_mode))
     {
-        printf("Not a regular file. Cannot be opened\n");
+        printf("%s is a dir, cannot be opened\n", path);
+        return -2;  // Special DIR return value
+    }
+    else if (!S_ISREG(mip->INODE.i_mode))
+    {
+        printf("%s is not a file, cannot be opened\n", path);
+        return -1;
     }
     
     oget(mip, mode, &fd);
@@ -83,6 +93,20 @@ int my_open(char* path, char* modeStr)
     mip->dirty = 1;
 
     return fd;
+}
+
+int open_cmd(int argc, char* args[])
+{
+    if(argc < 2)
+    {
+        printf("usage: open path mode\n");
+        return 0;
+    }
+    if(my_open(args[0], args[1])== -1)
+    {
+        printf("open failed\n");
+    }
+    return 0;
 }
 
 int my_close(int fd)
@@ -107,6 +131,18 @@ int my_close(int fd)
     return 0;
 }
 
+int close_cmd(int argc, char* args[])
+{
+    if(argc < 1)
+    {
+        printf("usage: close fd\n");
+        return 0;
+    }
+    int fd = atoi(args[0]);
+    my_close(fd);
+    return 0;
+}
+
 int my_lseek(int fd, int position)
 {
     OFT* oftp = running->fd[fd];
@@ -118,13 +154,29 @@ int my_lseek(int fd, int position)
     return original;
 }
 
-int pfd()
+int lseek_cmd(int argc, char* args[])
+{
+    if(argc < 2)
+    {
+        printf("usage: lseek fd position\n");
+    }
+    int fd = atoi(args[0]);
+    int pos = atoi(args[1]);
+
+    my_lseek(fd, pos);
+    return 0;
+}
+
+int pfd(int argc, char* args[])
 {
     printf(" fd    mode    offset    INODE\n");
     printf("----   ----     ----     ------\n");
     for(int i = 0; i < 10; i++)
     {
-        printf("%d    %s    %d    [%d, %d]\n", i, running->fd[i]->mode == 0? "READ" : running->fd[i]->mode == 1? "WRITE" : running->fd[i]->mode == 2? "READWRITE" : running->fd[i]->mode == 3? "APPEND": " ", running->fd[i]->offset, running->fd[i]->mptr->dev,running->fd[i]->mptr->ino);
+        if(!running->fd[i])
+            printf("0       0         0          0\n");
+        else
+            printf("%d    %s    %d        [%d, %d]\n", i, running->fd[i]->mode == 0? "READ" : running->fd[i]->mode == 1? "WRITE" : running->fd[i]->mode == 2? "READWRITE" : running->fd[i]->mode == 3? "APPEND": " ", running->fd[i]->offset, running->fd[i]->mptr->dev,running->fd[i]->mptr->ino);
     }
 
     return 0;
