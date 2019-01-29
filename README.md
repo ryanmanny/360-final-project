@@ -12,7 +12,7 @@ Start with an empty disk for level-1
 - ls ✓
 - pwd ✓
 - cd ✓
-- mkdir ✓
+- mkdir ✓  TODO: Fix: Allocate more space for full directory
 - rmdir ✓
 - creat ✓
 - link ✓
@@ -27,9 +27,9 @@ Start with an empty disk for level-1
 
 Use samples/PROJECT/mydisk for level-2
 
-- cat 
-- cp
-- mv
+- cat ✓
+- cp ✓
+- mv ✓
 
 -------------------------------------------------------------------------------
     TEST:
